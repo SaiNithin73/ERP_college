@@ -1,0 +1,124 @@
+═══════════════════════════════════════════════════════════════════════════════
+ERP Core — Frontend Workspace
+Overview & Progress Log
+Workspace: c:/Users/X40-J/Desktop/frontend
+═══════════════════════════════════════════════════════════════════════════════
+
+─── SESSION: 2026-03-04 ────────────────────────────────────────────────────────
+
+TASK: Full Project Rule Compliance Audit
+STATUS: Complete
+CHANGES:
+  - Read .agent/rules.txt (F1–F15) and backend .agent/rules.txt (B1–B10)
+  - Performed full audit of all dashboard components and shared files
+  - Produced compliance audit: 5 conflicts, 8 gaps identified
+  - Produced revised implementation plan (15 steps, 19 files)
+  - Plan approved. Incremental compliance approach adopted.
+  
+FILES MODIFIED: None (planning only)
+FILES CREATED:
+  - src/types/api.d.ts         [NEW] All API response type definitions
+  - src/types/components.d.ts  [NEW] All component prop interfaces
+
+---
+
+TASK: Staff Portal Logout Implementation
+STATUS: Complete
+CHANGES:
+  - Staff portal logout added to avatar dropdown
+  - Duplicate standalone logout button removed (none found)
+
+---
+
+TASK: Fix Glassmorphism & Hover Tilt — Login Card (Sign-In Page)
+STATUS: Complete
+SCOPE: src/components/ui/sign-in-card.tsx (only)
+NO BACKEND FILES TOUCHED.
+
+CHANGES TO sign-in-card.tsx:
+  1. [F14 — Glassmorphism Removal]
+     - Removed: backdrop-blur-xl from card body div (line 297, original)
+     - Removed: bg-black/40 from card body div
+     - Added:   bg-slate-900 (solid surface token equivalent)
+     - Changed: border-white/[0.05] → border-white/10
+     - Changed: shadow-2xl → shadow-lg (Rule F14 3-tier scale)
+     
+  2. [F5 — Hover Animation Removal]
+     - Removed: useMotionValue, useTransform imports
+     - Removed: mouseX, mouseY motion values
+     - Removed: rotateX, rotateY transforms
+     - Removed: handleMouseMove, handleMouseLeave handlers
+     - Removed: style={{ perspective: 1500 }} from outer wrapper
+     - Removed: inner <motion.div> with style={{ rotateX, rotateY }}
+     - Removed: whileHover={{ z: 10 }} on card wrapper
+     - KEPT:    Entrance animation (opacity: 0→1, y: 20→0 on mount)
+     - KEPT:    Button whileHover={{ scale: 1.02 }} on Continue/Verify buttons
+     - KEPT:    Role tab pill animation (layoutId="role-pill")
+     - KEPT:    Form switch AnimatePresence transitions
+     
+  3. [F8 — Mobile Touch Targets]
+     - Added: min-h-[44px] to all role tab <button> elements
+     - Added: overflow-x-auto to role tabs container
+
+WHAT WAS NOT CHANGED (preserved exactly):
+  - All form submission logic, MFA flow, auth mode toggle
+  - Page background (solid deep blue gradient + glow blobs)
+  - Card layout, heading, role icon, all field structure
+  - Traveling light beam animations on card border
+  - Card glow on hover (opacity only — no movement)
+
+═══════════════════════════════════════════════════════════════════════════════
+DEFERRED VIOLATIONS
+(Do not fix during feature work — review in dedicated refactor sessions)
+═══════════════════════════════════════════════════════════════════════════════
+
+sign-in-card.tsx — F2 — File located at src/components/ui/ instead of required
+    src/components/auth/ location per file structure spec — 2026-03-04
+
+sign-in-card.tsx — F4 — Inline `type Role` and `type AuthMode` defined inside
+    component file; should be in src/types/components.d.ts — 2026-03-04
+
+sign-in-card.tsx — F4 — ROLE_CONFIG uses inline hex glow values (e.g.,
+    "rgba(14,165,233,0.4)") — should be CSS variable tokens — 2026-03-04
+
+sign-in-card.tsx — F4 — Inline <Input> component defined inside sign-in-card.tsx
+    instead of imported from src/components/ui/input.tsx — 2026-03-04
+
+sign-in-card.tsx — F5 — Animation variants (initial/animate/exit props) defined
+    inline throughout; should be named exports from transitions.tsx — 2026-03-04
+
+sign-in-card.tsx — F5 — signup height animation (height: 0 → auto) violates
+    GPU-safe rule (must only animate transform + opacity) — 2026-03-04
+
+sign-in-card.tsx — F11 — No JSDoc comments on helper functions — 2026-03-04
+
+sign-in-card.tsx — F12 — Card glow boxShadow animation uses inline glow values
+    from active.glow (hardcoded rgba in ROLE_CONFIG) — 2026-03-04
+
+dashboard.tsx       — F14 — backdrop-blur-xl on sidebar, header, cards — 2026-03-04
+admin-dashboard.tsx — F14 — backdrop-blur-2xl, backdrop-blur-xl on sidebar/header — 2026-03-04
+staff-dashboard.tsx — F14 — backdrop-blur and bg-white/[opacity] — 2026-03-04
+management-dashboard.tsx — F14 — backdrop-blur and bg-white/[opacity] — 2026-03-04
+
+admin-dashboard.tsx — F12 — Hardcoded '#10b981' and '#ef4444' in mfaData chart — 2026-03-04
+admin-dashboard.tsx — F12 — Hardcoded '3 Critical' stat value — 2026-03-04
+admin-dashboard.tsx — F4  — permissions_matrix typed as `any` — 2026-03-04
+
+dashboard.tsx — F9/F6 — isOngoing() business logic computed on frontend;
+    should be is_ongoing: boolean from API (pending B7 decision from user) — 2026-03-04
+
+dashboard.tsx — F5 — Inline animation variants throughout — 2026-03-04
+dashboard.tsx — F12 — Recharts Tooltip uses inline RGBA/hardcoded colors — 2026-03-04
+
+─── INFRASTRUCTURE PENDING (Session interrupted by scoped task) ─────────────
+Created: src/types/api.d.ts ✅
+Created: src/types/components.d.ts ✅
+Pending: src/components/shared/icons.tsx
+Pending: src/components/shared/formatters.ts
+Pending: src/components/animations/transitions.tsx
+Pending: src/components/animations/counters.tsx
+Pending: src/components/animations/microinteractions.tsx
+Pending: src/hooks/useFetch.ts
+Pending: src/hooks/useClickOutside.ts
+Pending: src/components/ui/selects.tsx
+═══════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,15 @@
+import { RolePortal } from "@/components/auth/role-portal";
+
+/**
+ * Main Application Entry Point
+ * Sole responsibility: Rendering the Core UI components.
+ */
+function App() {
+  return (
+    <main className="antialiased">
+      <RolePortal />
+    </main>
+  );
+}
+
+export default App;

@@ -1,0 +1,16 @@
+﻿src/features/admin/portal-monitor.tsx(1,1): error TS6133: 'useState' is declared but its value is never read.
+src/features/admin/portal-monitor.tsx(8,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+src/features/admin/system-health.tsx(1,52): error TS6133: 'CardDescription' is declared but its value is never read.
+src/features/staff/announcements.tsx(1,29): error TS6133: 'CardHeader' is declared but its value is never read.
+src/features/staff/announcements.tsx(1,41): error TS6133: 'CardTitle' is declared but its value is never read.
+src/features/staff/announcements.tsx(1,52): error TS6133: 'CardDescription' is declared but its value is never read.
+src/features/staff/class-management.tsx(1,52): error TS6133: 'CardDescription' is declared but its value is never read.
+src/features/staff/class-management.tsx(5,10): error TS6133: 'Users' is declared but its value is never read.
+src/features/staff/profile.tsx(4,1): error TS6133: 'Input' is declared but its value is never read.
+src/features/staff/profile.tsx(5,34): error TS6133: 'AvatarImage' is declared but its value is never read.
+src/features/staff/question-papers.tsx(1,52): error TS6133: 'CardDescription' is declared but its value is never read.
+src/features/staff/salary.tsx(1,52): error TS6133: 'CardDescription' is declared but its value is never read.
+src/features/student/assignments.tsx(3,39): error TS6133: 'TabsContent' is declared but its value is never read.
+src/features/student/courses.tsx(4,1): error TS6133: 'BookOpen' is declared but its value is never read.
+src/features/student/fees.tsx(2,69): error TS6133: 'CardFooter' is declared but its value is never read.
+src/features/student/fees.tsx(3,1): error TS6133: 'Badge' is declared but its value is never read.

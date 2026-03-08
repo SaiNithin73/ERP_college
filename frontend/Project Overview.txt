@@ -1,0 +1,405 @@
+ERP CORE - COMPREHENSIVE PROJECT OVERVIEW
+Last Updated: 2026-03-04
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. PROJECT PURPOSE
+──────────────────
+ERP Core is a centralized Educational Resource Planning (ERP) platform for academic
+institutions. It provides four distinct, fully authenticated portal experiences:
+
+  • Students    — Academic health, attendance, schedule, assignments, GPA trends
+  • Staff       — Course management, leave approvals, mentee tracking, daily schedule
+  • Admins      — System-wide oversight, user directory, audit logs, MFA status
+  • Management  — Executive KPIs, financial health, department analytics, admissions
+
+All portals share a unified authentication layer with role-based redirection, MFA
+verification, and a persistent theme system (light/dark).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. TECHNOLOGY STACK
+─────────────────────
+Language (Frontend):  TypeScript
+Language (Backend):   JavaScript (Node.js)
+Language (Database):  SQL (MySQL)
+Styling:              Tailwind CSS v3 + CSS Variables
+
+Frontend Runtime:     React 18 + Vite
+UI Components:        Shadcn UI (Radix primitives)
+Charts:               Recharts (GPA trends, bar charts, area charts)
+Animations:           Framer Motion (page transitions, state switches)
+Icons:                Lucide React
+Notifications:        Sonner (toast system)
+Routing:              React Router DOM
+
+Backend Runtime:      Node.js + Express.js
+Authentication:       JWT + otplib (TOTP-based MFA)
+Database Driver:      mysql2 (connection pool via db.js)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. PROJECT STRUCTURE
+──────────────────────
+
+BACKEND  (c:/Users/X40-J/Desktop/backend)
+├── server.js          ← Sole API layer. All Express routes, auth logic, data fetching.
+├── db.js              ← MySQL connection pool only. Imported exclusively by server.js.
+├── .env               ← All secrets: DB_HOST, DB_USER, DB_PASS, DB_NAME, JWT_SECRET,
+│                          OTP_SECRET, PORT. Never committed.
+└── package.json       ← Dependencies: express, mysql2, otplib, jsonwebtoken, cors, etc.
+
+FRONTEND (c:/Users/X40-J/Desktop/frontend)
+├── index.html                ← HTML entry point
+├── package.json              ← Frontend scripts and dependencies
+├── tailwind.config.js        ← Custom design tokens, semantic color map, animation config
+├── components.json           ← Shadcn UI configuration and path aliases
+├── vite.config.ts            ← Vite build config with @/ path alias
+└── src/
+    ├── main.tsx              ← React mount point
+    ├── App.tsx               ← Router + DashboardRouter (role-based dispatch) + Toaster
+    ├── index.css             ← Tailwind directives + :root and .dark CSS variable declarations
+    ├── App.css               ← Component-specific global overrides
+    │
+    ├── types/                ← [NEW] All TypeScript definitions (no `any` usage)
+    │   ├── api.d.ts          ← All API response shapes and backend envelope contract
+    │   └── components.d.ts  ← All component prop interfaces (CustomSelect, IconProps, etc.)
+    │
+    ├── pages/                ← Portal entry points (one per role)
+    │   ├── dashboard.tsx           ← Student Portal
+    │   ├── staff-dashboard.tsx     ← Staff Portal
+    │   ├── admin-dashboard.tsx     ← Admin Portal
+    │   └── management-dashboard.tsx← Management / Executive Portal
+    │
+    ├── components/
+    │   ├── theme-provider.tsx      ← Light/Dark mode context provider
+    │   ├── theme-toggle.tsx        ← UI toggle button for theme switching
+    │   │
+    │   ├── auth/                   ← Authentication components
+    │   │   ├── role-portal.tsx     ← Role-based redirection (reads localStorage userRole)
+    │   │   ├── sign-in-card.tsx    ← Main auth interface (login, signup, MFA, role tabs)
+    │   │   ├── forgot-password-card.tsx ← Password recovery flow
+    │   │   └── auth-switch.tsx    ← Toggle between signin/signup states
+    │   │
+    │   └── ui/                    ← Shadcn + Custom UI primitives
+    │       ├── card.tsx           ← All card variants
+    │       ├── button.tsx         ← All button variants
+    │       ├── badge.tsx          ← Status chips (Safe, Low, Critical, Pending, etc.)
+    │       ├── input.tsx          ← Text entry fields
+    │       ├── input-otp.tsx      ← MFA/OTP 6-digit verification field
+    │       ├── progress.tsx       ← Progress bars (attendance, credits)
+    │       ├── skeleton.tsx       ← Loading placeholders (Three-State Law)
+    │       ├── table.tsx          ← Data grids with sticky headers
+    │       ├── tabs.tsx           ← Tab navigation within cards
+    │       ├── dropdown-menu.tsx  ← Collapsible user profile menus
+    │       ├── avatar.tsx         ← User avatar with initials fallback
+    │       ├── breadcrumb.tsx     ← Page navigation paths
+    │       └── switch.tsx         ← Boolean toggle elements
+    │
+    └── lib/
+        └── utils.ts              ← Tailwind cn() class union utility
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. AUTHENTICATION FLOW
+────────────────────────
+Route: /   → RolePortal → SignInCard
+
+  Step 1 — Role Selection
+    User picks a role via the four-tab switcher: Student | Staff | Management | Admin.
+    Each role has its own gradient color and icon on the card.
+
+  Step 2 — Credentials
+    Email + Password submitted to POST /login (or POST /signup for new accounts).
+    Backend validates and returns a userId + mfaCode (displayed via toast notification).
+
+  Step 3 — MFA Verification
+    User enters the 6-digit OTP in InputOTP. Submitted to POST /verify-mfa.
+    On success: JWT-style session stored in localStorage (userRole, userId).
+    Redirect to /dashboard.
+
+  Step 4 — Role Dispatch (DashboardRouter in App.tsx)
+    Reads localStorage userRole and renders the matching portal:
+      student    → <Dashboard />
+      staff      → <StaffDashboard />
+      admin      → <AdminDashboard />
+      management → <ManagementDashboard />
+
+  Forgot Password: Route /forgot-password → <ForgotPasswordCard />
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. PORTAL PAGES & SECTIONS
+────────────────────────────
+
+All portals share the same structural pattern:
+  • Collapsible sidebar (desktop, 240px expanded / 72px icon-only)
+  • Hamburger drawer (mobile-only, 280px wide, overlay with dismiss-on-click)
+  • Sticky top header: search bar, theme toggle, notifications/alerts, user avatar menu
+  • activeSection state (useState) drives all content rendering
+  • On mobile: clicking any nav item updates activeSection then closes the drawer
+  • Sections without a dedicated render branch show a placeholder card with
+    the section icon, "coming soon" message, and "Back to Dashboard" button
+
+─── STUDENT PORTAL (dashboard.tsx) ─────────────────────────────────────────────
+Portal label:   "Student Portal"
+Sidebar accent: Indigo/Violet gradient
+Default section: 'dashboard'
+API endpoint:   GET /api/dashboard/student/:userId
+Falls back to:  Inline demo data (CGPA 8.72, CS Sem 5)
+
+Sidebar nav items (7):
+  • Dashboard    ← Full academic overview
+  • Courses      ← Enrolled subjects, syllabus, attendance tracking
+  • Analytics    ← Radar chart for skills, exact marks/grades table
+  • Calendar     ← Upcoming exams, holidays, due dates
+  • Assignments  ← Tabbed view (Pending, Submitted, Graded) with details
+  • Fees & Fines ← Fee payment (partial payment supported), Fine payment, Semester-grouped Receipt DL
+  • Settings     ← User preferences
+
+Dashboard section — what renders:
+  ┌─ Row 1 (2 columns on lg) ───────────────────────────────────────────────┐
+  │  CGPA Gauge Card                                                         │
+  │    • Custom SVG radial gauge (140×140). Animated strokeDashoffset.       │
+  │    • Gradient arc: Indigo → Violet → Light Violet                        │
+  │    • Shows CGPA value (e.g. 8.72) centered below the arc                 │
+  │  Academic Stats Card (spans 2 cols on lg)                                │
+  │    • CGPA numeric · Credits Earned · Semester · Department               │
+  │    • Enrollment year shown as sub-label on Credits card                  │
+  └──────────────────────────────────────────────────────────────────────────┘
+  ┌─ Row 2 (3 columns on lg) ───────────────────────────────────────────────┐
+  │  Attendance Card                                                          │
+  │    • Per-subject rows: subject code + name, classes attended / total,    │
+  │      percentage, linear progress bar, status badge (Safe/Low/Critical)   │
+  │    • Badge color: Safe=green, Low=amber, Critical=red                    │
+  │  Today's Schedule Card                                                   │
+  │    • Timeline view with vertical line and dot indicators                 │
+  │    • Ongoing class: indigo highlighted row + pulsing LIVE badge          │
+  │    • Instructor + room shown per class                                   │
+  │  Assignments Card                                                        │
+  │    • Urgency badge: Today (red) / This Week (amber) / Later (slate)      │
+  │    • Status badge: Pending / Submitted / Graded                          │
+  │    • Subject name + deadline date shown                                  │
+  └──────────────────────────────────────────────────────────────────────────┘
+  ┌─ Row 3 (full width) ────────────────────────────────────────────────────┐
+  │  GPA Trend Chart                                                         │
+  │    • Recharts AreaChart, semester-by-semester GPA                        │
+  │    • Tooltip showing exact GPA per semester                              │
+  │    • ResponsiveContainer width="100%" (no fixed pixel width)             │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+─── STAFF PORTAL (staff-dashboard.tsx) ──────────────────────────────────────────
+Portal label:   "Staff Portal"
+Sidebar accent: Indigo/Purple gradient
+Default section: 'dashboard'
+API endpoint:   GET /api/dashboard/staff/:userId
+Falls back to:  Inline mock (4 courses, 24 mentees, 7 pending tasks, 12 leave balance)
+
+Sidebar nav items (9):
+  • Dashboard        ← Full faculty overview
+  • Attendance       ← Mark attendance per lecture
+  • Leave Requests   ← Processing area for student/staff leaves
+  • Research         ← Publications, grants
+  • Question Papers  ← Authoring and submitting exam papers
+  • Salary           ← Salary breakdown and payslip generation
+  • Announcements    ← Global and department-level alerts
+  • Class Management ← Grading, setting assignments
+  • My Profile       ← Personal info and department role
+
+Dashboard section — what renders:
+  ┌─ Stat Cards (4 across) ─────────────────────────────────────────────────┐
+  │  Assigned Courses · Total Mentees · Pending Tasks · Leave Balance Days   │
+  │  Each card has a color-coded icon badge                                   │
+  └──────────────────────────────────────────────────────────────────────────┘
+  ┌─ 2-column grid ─────────────────────────────────────────────────────────┐
+  │  Daily Schedule (col 1)                                                  │
+  │    • Timeline with vertical line + dot indicators                        │
+  │    • Ongoing class: indigo row + pulsing LIVE badge                      │
+  │    • "Mark Attendance" button appears on the ongoing class if not marked │
+  │    • Empty state: "No scheduled classes today"                           │
+  │                                                                          │
+  │  Right panel (col 2+3):                                                  │
+  │    Pending Approvals table                                               │
+  │      • Student name + roll number, Leave/OD badge, reason, date range   │
+  │      • Approve (✓ green) and Reject (✗ red) icon buttons per pending row │
+  │      • Already-actioned rows show Approved/Rejected badge instead        │
+  │      • Optimistic UI: status updates immediately in UI, then calls API   │
+  │        POST /api/leave-status with { requestId, status, staffId }        │
+  │    Attendance Trends bar chart                                           │
+  │      • Recharts BarChart, per-course attendance percentage               │
+  │      • Gradient fill (indigo top → purple bottom), rounded bar tops      │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+─── ADMIN PORTAL (admin-dashboard.tsx) ──────────────────────────────────────────
+Portal label:   "SYSTEM CORE"
+Sidebar accent: Red/Crimson gradient (cyber command center theme)
+Background:     Carbon black (#030712) with subtle dot grid overlay in dark mode
+Default section: 'vital stats'
+API endpoint:   GET /api/dashboard/admin/:userId
+Falls back to:  Root Admin mock (1245 sessions, 42d14h uptime, 14.2 GB DB)
+
+Sidebar nav items (9):
+  • Vital Stats     ← System health overview
+  • User Directory  ← Full user table with search and actions
+  • Permissions     ← Role-based access control
+  • Backups         ← Database snapshots
+  • Portal Monitor  ← Status of different portals (Student, Staff, Admin, Management)
+  • Student Manager ← Admin-level student record oversight and flags
+  • Staff Manager   ← Faculty record edits, HR tools
+  • System Health   ← Deep dive on API times, CPU, and error logs
+  • Announcements   ← Compose and broadcast global announcements
+
+Header extras:
+  • Global search with Cmd+K / Ctrl+K keyboard shortcut (focuses #global-search)
+  • Alert bell shows pulsing red dot indicator instead of standard notification dot
+  • User avatar uses dark background with red initials (admin color coding)
+  • Profile dropdown labeled "Admin Terminal"
+
+Vital Stats section — what renders:
+  ┌─ System Vital Cards (4 across) ─────────────────────────────────────────┐
+  │  Active Sessions   — live count from API (icon: emerald)                 │
+  │  Server Uptime     — days + hours format (icon: blue)                   │
+  │  Database Size     — size string from API (icon: purple)                │
+  │  Security Alerts   — hardcoded "3 Critical" (red, pulsing border) ⚠     │
+  └──────────────────────────────────────────────────────────────────────────┘
+  ┌─ 2-column grid ─────────────────────────────────────────────────────────┐
+  │  User Directory Preview (col 1+2, left card)                            │
+  │    • Table: ID · Name · Email · Role · MFA status · Account status badge│
+  │    • Status: Active (green) / Inactive (amber) / Locked (red)           │
+  │    • "Manage" button per row (actions TBD)                              │
+  │    • "View Full Directory →" link switches to 'user directory' section  │
+  │                                                                          │
+  │  MFA Adoption (right card)                                              │
+  │    • Recharts PieChart (donut) — 85% Enabled (green) / 15% Disabled(red)│
+  │    • Custom legend below chart with color dots                          │
+  │    • Underneath: Recent Audit Log entries                               │
+  │      — Action description + IP address + relative timestamp             │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+User Directory section — what renders:
+  • Full searchable table (real-time filter on name/email/ID)
+  • Search bar in section header synced with global header search (searchQuery state)
+  • Same table structure as the preview: ID, Name, Email, Role, MFA, Status
+  • Download Report button in card header (triggers handleBackup toast)
+  • Empty result state shown when search has no matches
+
+─── MANAGEMENT PORTAL (management-dashboard.tsx) ────────────────────────────────
+Portal label:   "Executive Board"
+Sidebar accent: Amber/Gold gradient (executive theme)
+Background:     Deep navy (#0B0F19) with amber glow in dark mode
+Default section: 'overview'
+API endpoint:   GET /api/dashboard/management/:userId
+Falls back to:  Dr. Sarah Connor mock (14,250 students, $4.2M revenue, 92% placement)
+
+Sidebar nav items (4):
+  • Overview     ← Executive KPI dashboard (default, fully built)
+  • Analytics    ← Deep data (BarChart, LineChart, PieChart)
+  • Financials   ← AreaChart trends and financial KPI cards
+  • Departments  ← Grid layout comparing all departments
+
+Header extras:
+  • Title "Institutional Overview" shown in header on sm+ screens
+  • Amber notification dot on bell icon
+  • Profile dropdown shows "Board Member" sub-label and "Download Report (PDF)" option
+  • User avatar has amber ring + amber gradient initials
+
+Overview section — what renders:
+  ┌─ KPI Cards (4 across) ──────────────────────────────────────────────────┐
+  │  Total Students · Revenue Collected · Placement % · Faculty Strength    │
+  │  Each card: metric value + trend arrow (ArrowUpRight green / ArrowDownRight red)│
+  └──────────────────────────────────────────────────────────────────────────┘
+  ┌─ Charts Row (3 columns) ────────────────────────────────────────────────┐
+  │  Financial Health (col 1+2) — Recharts AreaChart                        │
+  │    • Revenue (emerald) vs Expenses (red) area chart, 8 months           │
+  │    • Custom tooltip component with dark card + colored value labels      │
+  │                                                                          │
+  │  Admission Pipeline (col 3) — Custom horizontal funnel                  │
+  │    • Animated width bars per stage (Framer Motion width: 0 → %)        │
+  │    • Stages: Total Applicants → Eligible → Interviewed → Admitted       │
+  │    • Each bar color-coded (slate/violet/pink/yellow)                    │
+  └──────────────────────────────────────────────────────────────────────────┘
+  ┌─ Bottom Row (3 columns) ────────────────────────────────────────────────┐
+  │  Departmental Performance table (col 1+2)                               │
+  │    • Department · Attendance (mini progress bar) · Pass Rate % · Grievances│
+  │    • Grievances > 10 get destructive (red) badge                       │
+  │                                                                          │
+  │  Institutional Alerts (col 3)                                           │
+  │    • Alert cards: colored dot (danger=red pulsing/warning=amber/info=blue)│
+  │    • Title + description per alert                                      │
+  │    • "Library Budget Exceeded / Attendance Drop / Server Maintenance"   │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+Library section — what renders:
+  ┌─ KPI Cards (4 across) ──────────────────────────────────────────────────┐
+  │  Total Titles · Active Borrowers · Overdue Items · New Arrivals         │
+  └──────────────────────────────────────────────────────────────────────────┘
+  ┌─ Middle Row (3 columns) ────────────────────────────────────────────────┐
+  │  Weekly Circulation Activity (col 1+2) — Recharts BarChart              │
+  │    • Borrowed vs Returned bar chart, 7 days                             │
+  │  Recent Ledger (col 3)                                                  │
+  │    • Timeline of recent book transactions (borrow/return/renewal)       │
+  └──────────────────────────────────────────────────────────────────────────┘
+  ┌─ Bottom Row (2 columns) ────────────────────────────────────────────────┐
+  │  Collection Status (col 1)                                              │
+  │    • List of subjects with progress bars + low stock warning badges     │
+  │  Borrower Demographics & Procurement Alerts (col 2)                     │
+  │    • PieChart showing user breakdown (Undergrad, Postgrad, Staff)       │
+  │    • Alert card for subjects falling below threshold                    │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+6. SHARED UI/UX PATTERNS
+──────────────────────────
+Three-State Law: All data components handle Loading (Skeleton) → Success (data)
+                 → Empty/Error states. No blank rendering.
+
+Optimistic UI:   Staff leave approvals update immediately in UI, then syncs to
+                 backend. Failure would roll back (toast notification shown).
+
+Theme system:    ThemeProvider wraps all dashboard routes. Login page uses a fixed
+                 hardcoded dark theme (deep blue gradient). No system-level theme
+                 interference on the auth pages.
+
+Notifications:   Sonner toast system used throughout. Variants: success (green),
+                 error (red), info (blue), warning (amber). MFA codes delivered
+                 via toast + optional browser push notification.
+
+Navigation:      Mobile-first. Sidebar hidden on mobile with hamburger. Clicking
+                 any nav item updates activeSection and closes the drawer.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7. HOW TO RUN
+────────────────
+Backend:
+  cd c:/Users/X40-J/Desktop/backend
+  node server.js          ← Runs on PORT from .env (default 5000)
+
+Frontend:
+  cd c:/Users/X40-J/Desktop/frontend
+  npm run dev             ← Runs on http://localhost:5173
+
+Both must be running simultaneously for full functionality.
+Backend is expected at http://localhost:5000 by frontend API calls.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+8. DEFERRED BACKEND ENDPOINTS
+───────────────────────────────
+The following endpoints are stubbed/mocked in the frontend and need backend implementation:
+  • POST /api/payments           — Record a partial or full payment
+  • GET /api/payments/history    — Fetch user's payment history grouped by semester
+  • GET /api/payments/receipt/:id— Generate and download PDF receipt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+8. ACTIVE AGENT RULES
+───────────────────────
+Frontend rules: .agent/rules.txt (Rules F1–F15 + Initialization Protocol)
+Backend rules:  .agent/rules.txt (Rules B1–B10 + Initialization Protocol)
+
+Incremental compliance approach is active. New code must be fully compliant.
+Existing violations are logged in Overview & Progress.txt and fixed on contact.
+A full compliance audit and implementation plan are stored in the brain directory.

@@ -1,0 +1,253 @@
+---
+
+# ERP Core — Agent Rules v2.0
+*Agent must reply "Rules Initialized ✓" before any task begins.*
+
+---
+
+# FRONTEND RULES
+*Applies to: `c:/Users/X40-J/Desktop/frontend`*
+
+---
+
+**Rule F1 — Design System & Tailwind**
+- `tailwind.config.js` is the **only** place for raw HEX/RGB values. No exceptions.
+- `index.css` maps config tokens to `:root` and `.dark` — never redeclares colors directly.
+- All colors use semantic names (`primary`, `success`, `danger-surface`). No arbitrary values or magic numbers (e.g., `top-[13px]`).
+- Before adding a token, audit existing ones. ≥95% similar = reuse existing.
+- Never strip descriptive structural classes (e.g., `attendance-table-container`).
+- Shadcn UI component tokens in `components.json` must stay in sync with `tailwind.config.js`.
+
+---
+
+**Rule F2 — Component Architecture & File Structure**
+
+Every element belongs to exactly one category file. Variants extend existing files. New category files require explicit user approval.
+
+```
+frontend/src
+  /components
+    /ui
+      card.tsx           ← All card variants
+      tabs.tsx           ← Tab/pill nav
+      table.tsx          ← Data grids, sticky headers
+      button.tsx         ← All button variants
+      badge.tsx          ← Status chips (Safe, Low, Critical)
+      modals.tsx         ← Dialogs, drawers, overlays
+      forms.tsx          ← Inputs, checkboxes, radio groups
+      input.tsx          ← Text entry fields
+      input-otp.tsx      ← MFA/OTP verification field
+      progress.tsx       ← Progress bars (attendance, credits)
+      skeleton.tsx       ← Loading placeholders
+      dropdown-menu.tsx  ← Collapsible menus (user profile)
+      avatar.tsx         ← User profile placeholders
+      breadcrumb.tsx     ← Navigation paths
+      switch.tsx         ← Boolean toggles
+      selects.tsx        ← CustomSelect (only dropdown component)
+      tooltips.tsx       ← Tooltip wrappers
+    /animations
+      transitions.tsx        ← Page-level AnimatePresence variants
+      microinteractions.tsx  ← Hover lifts, tap scales, ChevronRotateVariant
+      tilt.tsx               ← 3D card tilt + radial glare physics
+      counters.tsx           ← Animated number counters (GPA, CGPA)
+      reveal.tsx             ← useInView scroll-triggered animations
+    /layout
+      shell.tsx       ← Root layout wrapper
+      sidebar.tsx     ← Collapsible sidebar (all portals)
+      header.tsx      ← Mobile sticky header with hamburger
+    /auth
+      role-portal.tsx          ← Role-based redirection logic
+      sign-in-card.tsx         ← Authentication interface
+      forgot-password-card.tsx ← Password recovery flow
+      auth-switch.tsx          ← Toggle between auth states
+    /shared
+      icons.tsx        ← ALL SVGs as <Icon /> (currentColor only)
+      formatters.ts    ← formatGrade(), formatDate(), formatPercent(),
+                          formatAttendance(), formatCurrency()
+      errorBoundary.tsx
+  /hooks
+      useFetch.ts         ← Typed generic fetch hook
+      useTheme.ts
+      useTilt.ts
+      useClickOutside.ts
+  /types
+      api.d.ts            ← All API response shapes
+      components.d.ts     ← All component prop interfaces
+  /lib
+      utils.ts            ← Tailwind cn() utility (existing — do not duplicate)
+  /features
+      /student
+      /staff
+      /admin
+      /management
+  /pages
+      dashboard.tsx             ← Student portal entry
+      staff-dashboard.tsx       ← Staff portal entry
+      admin-dashboard.tsx       ← Admin portal entry
+      management-dashboard.tsx  ← Management portal entry
+  main.tsx     ← React mount point
+  App.tsx      ← Router + global providers
+  index.css    ← Tailwind directives + CSS variable declarations
+  App.css      ← Component-specific global overrides only
+```
+
+---
+
+**Rule F3 — Workflow**
+- **Minor tasks** (text, color tweaks, copy changes): Execute directly.
+- **Major tasks** (new pages, new portal sections, new state logic): Output numbered plan, wait for approval.
+- **Pre-task checklist** — agent must confirm before writing any code:
+  1. Which existing components are being reused
+  2. Which category files are being modified
+  3. Any new config tokens needed
+  4. Which portal(s) are affected (Student / Staff / Admin / Management)
+- Mobile-first always: `base → md: → lg:`. Tables scroll horizontally on mobile. Cards stack single-column. Sidebar hidden on mobile with hamburger drawer.
+- No orphan code. Every new element goes into its category file immediately.
+- Never modify any file in the `backend/` folder from the frontend workspace.
+
+---
+
+**Rule F4 — Code Quality & TypeScript**
+- `any` is unconditionally forbidden. All shapes defined in `/types/api.d.ts` and `/types/components.d.ts`.
+- All SVGs in `icons.tsx` with `currentColor`. Inline SVGs anywhere else = violation.
+- **Three-State Law:** Every data component explicitly handles:
+  - Loading → `skeleton.tsx` placeholders
+  - Success → rendered data
+  - Empty → descriptive message + icon
+- `React.memo` / `useMemo` mandatory on all data-heavy components (charts, tables, stat grids).
+- `useFetch.ts` must always be generically typed: `useFetch<StudentRecord[]>()`. Raw untyped `response.json()` consumption = violation.
+- All API response shapes consumed on the frontend must be defined in `api.d.ts` and match the backend response envelope contract exactly:
+  ```ts
+  // Success
+  { success: true; data: T }
+  // Error
+  { success: false; error: string }
+  ```
+
+---
+
+**Rule F5 — Animation Standards**
+- Framer Motion only. No other animation libraries. Ever.
+- Variants are exported named constants from their category file — never defined inline in page or feature files.
+- GPU-safe only: animate `transform` and `opacity` exclusively. No `height`, `width`, `top`, `left`.
+- Every animation checks `useReducedMotion()`.
+- New animations require a JSDoc comment: trigger, duration, easing, GPU-safety status.
+- CGPA SVG gauge animations use named variants from `counters.tsx`. GPA Recharts animations use named variants from `transitions.tsx`. Neither may define variants inline.
+
+---
+
+**Rule F6 — Data Tables**
+- Sticky headers + sticky first column on all tables.
+- All table data originates from MySQL via Express API — no mock or hardcoded data after initial development.
+- All data rendering uses `formatters.ts` utilities only. Inline string interpolation for dates/percentages/grades/currency = violation.
+- Every API-fed table handles 0-row responses with a descriptive Empty state — never an empty `<tbody>`.
+- Pagination is server-side (limit/offset from API) — never frontend array slicing.
+- Every table has pagination + "Select All" for bulk operations where applicable.
+- All interactive table elements carry `data-testid` attributes.
+
+---
+
+**Rule F7 — Forms & Data Integrity**
+- All form submissions POST to a defined Express route — never any direct database logic on the frontend.
+- Submission buttons show spinner + `disabled` during API calls. No exceptions.
+- Zod for all validation. Errors render inline via `aria-describedby`.
+- Dirty state warning modal on navigation-away from partially filled forms.
+- OTP input (`input-otp.tsx`) validates length and format client-side before enabling submission. OTP verification itself happens exclusively on the backend.
+- Every mutation endpoint response is handled explicitly for both `success: true` and `success: false`.
+
+---
+
+**Rule F8 — Accessibility**
+- Full Tab navigation. Modals trap focus, dismiss on `Esc`.
+- `<main>`, `<nav>`, `<aside>`, `<header>` used correctly — never generic `<div>` for structure.
+- Custom tabs/dropdowns/accordions carry `role`, `aria-selected`, `aria-expanded`, `aria-controls`.
+- Status badges (Safe, Low, Critical) always pair color with a text label — never color alone.
+- Mobile sidebar drawer must trap focus when open and dismiss on `Esc`.
+- Minimum touch target on all interactive elements: `min-h-[44px]` on mobile.
+
+---
+
+**Rule F9 — State & Performance**
+- Optimistic UI for low-risk toggles (attendance mark, leave approval); roll back on failure with descriptive Toast.
+- No prop drilling beyond 2 levels — use Context or feature-level state.
+- Every feature page uses `React.lazy()` + `Suspense` with `skeleton.tsx` fallback.
+- Active sidebar section state lives in the dashboard page component — not inside `sidebar.tsx`.
+- On mobile, clicking a sidebar nav item must: (1) update `activeSection`, (2) close the drawer — always both, always in this order.
+- No business logic on the frontend. Attendance calculations, GPA computations, leave approval logic, and role permissions are computed on the backend — never in React components.
+
+---
+
+**Rule F10 — Notifications**
+- Centralized Toast only. Variants: Success (green), Warning (amber), Error (red), Info (blue). No `alert()` or `console.error` shown to users.
+- Tooltips on complex academic terms (CGPA, credit hours, attendance thresholds).
+- Rollback Toasts must describe what failed specifically (e.g., "Failed to submit leave request — try again").
+- If an API call for a sidebar section fails, that section renders an Error state with a retry option — never silently shows empty UI.
+
+---
+
+**Rule F11 — Documentation**
+- JSDoc on every hook and formatter: purpose, params, return shape, usage example.
+- `tailwind.config.js` changes logged inline: `// Added: [token] — [reason] — [date]`.
+- No dead code. Commented-out blocks don't survive past one session.
+
+---
+
+**Rule F12 — Dashboard & Visualization**
+- All Recharts components use semantic config tokens only. Hardcoded chart colors = violation.
+- Custom SVG CGPA gauges use token-based stroke colors — no inline hex.
+- `ResponsiveContainer width="100%"` is mandatory on all Recharts instances — no fixed pixel widths.
+- Summary widgets (attendance %, pending approvals count) act as filtered deep-links or section switchers. Counts are fetched from the API on mount — never hardcoded.
+
+---
+
+**Rule F13 — Custom Select & Dropdown Standard**
+- Native `<select>` is forbidden. All dropdowns use `<CustomSelect />` from `ui/selects.tsx`.
+- All portal dropdown needs (semester picker, month filter, role selector) use this one component via props. No one-off dropdowns in feature files.
+- Colors via CSS variable tokens only — no hardcoded values inside the component.
+- **Anatomy:** Trigger button + `ChevronRotateVariant` (from `microinteractions.tsx`) — floating solid panel using `bg-[var(--surface-raised)]` in light and `bg-[var(--surface-raised-dark)]` in dark, with `border-[var(--border)]` and `shadow-md` — option items with `primary` hover + checkmark icon from `icons.tsx` — open/close via `dropdownVariant` from `transitions.tsx` (opacity + scaleY, GPU-safe).
+- **A11y:** `role="listbox"`, `aria-expanded`, `aria-selected` per option, Arrow Up/Down/Enter/Esc keyboard nav, focus trap while open.
+- **Props** (in `components.d.ts`): `options: SelectOption[]`, `value: string`, `onChange`, `placeholder?`, `disabled?`, `data-testid?`.
+- Click-outside via `useClickOutside` hook.
+- Mobile: full-width panel on base, floating on `md:` and above.
+
+---
+
+**Rule F14 — Surface & Theme Standard**
+- **Glassmorphism is banned.** `backdrop-blur-*`, `bg-white/[opacity]`, translucency, and blur-based depth on UI surfaces are not permitted anywhere.
+- **Prohibited:** `backdrop-blur-*`, `bg-white/60`, `bg-white/5`, `saturate-*` for surfaces, any `blur()` CSS filter on UI surfaces.
+- **Approved surfaces:** Solid background tokens from `tailwind.config.js` (`surface`, `surface-raised`, `surface-sunken`). Depth via solid color contrast, border tokens, and controlled `box-shadow`.
+- **Shadow scale (3-tier):** `shadow-sm` → `shadow-md` → `shadow-lg`. No glow effects, no colored shadows.
+- **Dark mode:** Dedicated dark solid tokens (`surface-dark`, `surface-raised-dark`) — not low-opacity white overlays.
+- Existing violations must be refactored to solid surfaces when that file is next touched.
+- `theme-provider.tsx` and `theme-toggle.tsx` are the only files that may reference theme state.
+
+---
+
+**Rule F15 — Portal Navigation Standard**
+- Each dashboard manages its own `activeSection` state via `useState`.
+- Sidebar nav items set `activeSection` on click — content renders conditionally based on this value.
+- Every section must have a defined render branch. Missing sections render:
+  ```tsx
+  <div className="flex items-center justify-center h-64 text-muted-foreground">
+    <p>Section coming soon</p>
+  </div>
+  ```
+- Active nav item: `bg-primary/10 text-primary font-semibold border-l-2 border-primary`
+- Inactive nav item: `text-muted-foreground hover:bg-muted hover:text-foreground`
+- Minimum touch target: `min-h-[44px]` on all nav items.
+
+---
+
+# Agent Initialization Protocol
+*(Applies to both frontend and backend workspaces)*
+
+At the start of every session the agent must:
+1. Reply **"Rules Initialized ✓"**
+2. State which workspace is active: **FRONTEND** or **BACKEND**
+3. State the feature/task being worked on
+4. Confirm which existing files will be modified
+5. Identify which portal(s) are affected if frontend (Student / Staff / Admin / Management)
+6. Flag any rule conflicts before writing code
+7. Log all changes made during the session to `Overview & Progress.txt` in the root of the active workspace
+
+---

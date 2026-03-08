@@ -1,0 +1,143 @@
+
+# BACKEND RULES
+*Applies to: `c:/Users/X40-J/Desktop/backend`*
+
+---
+
+**Rule B1 — Project Structure**
+
+```
+backend/
+  server.js      ← Sole API layer. All Express routes live here.
+  db.js          ← Sole database interface. Connection pool only.
+  .env           ← All secrets and config. Never committed.
+  package.json   ← Dependencies and scripts.
+```
+
+- No new files are added to the backend without explicit user approval.
+- No subdirectories, routers, or middleware files are created unless the agent presents a structural plan and receives approval first.
+- `db.js` is imported **only** in `server.js`. Never anywhere else.
+
+---
+
+**Rule B2 — Route Organization**
+
+All routes in `server.js` are grouped by portal domain with section comments:
+
+```js
+// ─── Auth Routes ──────────────────────────────
+// ─── Student Routes ───────────────────────────
+// ─── Staff Routes ─────────────────────────────
+// ─── Admin Routes ─────────────────────────────
+// ─── Management Routes ────────────────────────
+```
+
+- Every route has a one-line comment above it describing: method, path, purpose, and expected payload shape.
+- Routes are never mixed across domain sections.
+
+---
+
+**Rule B3 — Database & Query Safety**
+
+- All SQL queries use parameterized statements (`?` placeholders with `mysql2`). String-interpolated SQL = critical violation.
+- `db.js` configures the connection pool once using `.env` values. Pool settings are never hardcoded.
+- Schema changes (new tables, columns, relations, indexes) require explicit user approval before execution.
+- No raw MySQL error objects are ever sent to the frontend.
+- Query results are cast to typed shapes before being placed in the response `data` field.
+
+---
+
+**Rule B4 — Response Envelope Contract**
+
+Every endpoint returns this exact shape. No exceptions:
+
+```js
+// Success
+res.json({ success: true, data: <payload> });
+
+// Error
+res.status(<code>).json({ success: false, error: "Descriptive message" });
+```
+
+- Error messages describe what failed in plain language — never expose stack traces, SQL errors, or internal state.
+- HTTP status codes are always semantically correct: `200` success, `400` bad request, `401` unauthorized, `403` forbidden, `404` not found, `500` server error.
+
+---
+
+**Rule B5 — Authentication & Security**
+
+- JWT or session token verification runs as middleware before every protected route handler. No protected route bypasses auth middleware.
+- OTP generation, delivery trigger, and verification use `otplib` exclusively in the Auth Routes section. OTP logic is never duplicated or referenced outside this section.
+- OTP secrets, time windows, and JWT secrets come from `.env` only — never hardcoded.
+- `.env` variables are never logged, returned in responses, or exposed in any error message.
+- `.env` is never committed to version control. `.gitignore` must include `.env`.
+
+---
+
+**Rule B6 — Error Handling**
+
+- Every route wraps database calls in `try/catch`. Unhandled promise rejections = violation.
+- Catch blocks log the real error server-side (`console.error`) and return the sanitized envelope to the frontend.
+- A global error handler is defined at the bottom of `server.js` as a safety net for uncaught errors.
+
+---
+
+**Rule B7 — Business Logic Ownership**
+
+- Attendance calculations, GPA computations, leave approval logic, credit hour totals, and role permission checks are computed in `server.js` route handlers or directly in SQL queries.
+- The frontend receives only final, pre-computed values — never raw relational data it must join or calculate itself.
+- Pagination is always server-side: routes accept `limit` and `offset` query parameters and apply them in SQL (`LIMIT ? OFFSET ?`).
+
+---
+
+**Rule B8 — Workflow**
+
+- **Minor tasks** (adding a single field to an existing query, fixing a response message): Execute directly.
+- **Major tasks** (new routes, schema changes, new middleware, auth changes): Output numbered plan with route signatures and SQL statements, wait for approval.
+- **Pre-task checklist** — agent must confirm before writing any code:
+  1. Which route section is being modified
+  2. Whether any schema change is involved
+  3. The exact request shape (params, body, query)
+  4. The exact response `data` shape
+- Never modify any file in the `frontend/` folder from the backend workspace.
+
+---
+
+**Rule B9 — Documentation**
+
+- Every route has a one-line JSDoc-style comment: method, path, auth required, request shape, response shape.
+- `.env` changes are documented in a comment block at the top of `server.js`: variable name, purpose, and date added.
+- No dead code. Commented-out routes and queries don't survive past one session.
+
+---
+
+**Rule B10 — Environment & Configuration**
+
+Required `.env` variables for this project:
+```
+DB_HOST        ← MySQL host
+DB_USER        ← MySQL username
+DB_PASS        ← MySQL password
+DB_NAME        ← MySQL database name
+JWT_SECRET     ← Token signing secret
+OTP_SECRET     ← OTP generation secret
+PORT           ← Express server port
+```
+- Any new required config value is added to `.env` and documented per Rule B9.
+- `server.js` reads all config via `process.env` only — never from hardcoded strings or imported JSON config files.
+
+---
+
+# Agent Initialization Protocol
+*(Applies to both frontend and backend workspaces)*
+
+At the start of every session the agent must:
+1. Reply **"Rules Initialized ✓"**
+2. State which workspace is active: **FRONTEND** or **BACKEND**
+3. State the feature/task being worked on
+4. Confirm which existing files will be modified
+5. Identify which portal(s) are affected if frontend (Student / Staff / Admin / Management)
+6. Flag any rule conflicts before writing code
+7. Log all changes made during the session to `Overview & Progress.txt` in the root of the active workspace
+
+---
