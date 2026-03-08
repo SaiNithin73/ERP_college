@@ -1,0 +1,22 @@
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/pages/admin-dashboard.tsx(6,74): error TS6133: 'Server' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(7,5): error TS6133: 'Settings' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(8,11): error TS6133: 'Trash2' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(8,19): error TS6133: 'Plus' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(8,25): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(8,32): error TS6133: 'Eye' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(8,55): error TS6133: 'XCircle' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(8,64): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(8,77): error TS6133: 'Save' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(8,83): error TS6133: 'Space' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(8,103): error TS6133: 'Unlock' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(9,5): error TS6133: 'FileSpreadsheet' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(9,22): error TS6133: 'MailPlus' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(17,1): error TS6133: 'Skeleton' is declared but its value is never read.
+src/pages/admin-dashboard.tsx(19,23): error TS2307: Cannot find module '@/components/ui/label' or its corresponding type declarations.
+src/pages/admin-dashboard.tsx(20,26): error TS2307: Cannot find module '@/components/ui/textarea' or its corresponding type declarations.
+src/pages/admin-dashboard.tsx(22,79): error TS2307: Cannot find module '@/components/ui/select' or its corresponding type declarations.
+src/pages/admin-dashboard.tsx(701,63): error TS6133: 'c' is declared but its value is never read.

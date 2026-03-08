@@ -201,7 +201,20 @@ const setupDB = async () => {
     await pool.query(systemSettingsQuery);
     console.log("Table 'system_settings' is ready.");
 
+    // 15. Create Portal Locks table (for Admin Portal Manager — lock/unlock portals)
+    const portalLocksQuery = `
+      CREATE TABLE IF NOT EXISTS portal_locks (
+        portal_type VARCHAR(20) PRIMARY KEY,
+        locked_by INT NOT NULL,
+        locked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (locked_by) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `;
+    await pool.query(portalLocksQuery);
+    console.log("Table 'portal_locks' is ready.");
+
     return pool;
+
 
   } catch (error) {
     console.error("❌ SQL SETUP ERROR:");

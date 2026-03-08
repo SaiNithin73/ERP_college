@@ -14,6 +14,7 @@ import {
     Calendar,
     CalendarDays,
     CalendarOff,
+    CalendarClock,
     Clock,
     BarChart,
     BarChart3,
@@ -37,7 +38,6 @@ import {
     Monitor,
     PieChart as PieChartIcon,
     Scale,
-    Server,
     Settings,
     TrendingUp,
     User,
@@ -49,11 +49,21 @@ import {
     Zap,
     Search,
     Edit2,
+    Edit3,
+    Trash2,
+    Inbox,
+    List,
+    Pin,
+    Archive,
+    Smartphone,
     Save,
     Plus,
     Filter,
     RefreshCw,
     Share2,
+    Star,
+    Building2,
+    CheckCircle2,
 } from 'lucide-react';
 
 import { useReducedMotion } from 'framer-motion';
@@ -130,16 +140,12 @@ const FeeManagement = lazy(() => import('@/features/management/fee-management'))
 const LibraryOverview = lazy(() => import('@/features/management/library'));
 // Timetable component is inlined below for stability and performance
 // const Timetable = lazy(() => import('@/features/management/timetable'));
-const Placements = lazy(() => import('@/features/management/placements'));
-const Announcements = lazy(() => import('@/features/management/announcements'));
-const Reports = lazy(() => import('@/features/management/reports'));
-const SystemMonitor = lazy(() => import('@/features/management/system-monitor'));
+// const Placements = lazy(() => import('@/features/management/placements'));
+// Removed unused lazy imports for Announcements and Reports
 
 const LazyFallback = () => <div className="h-[60vh] w-full animate-pulse bg-slate-100 dark:bg-white/5 rounded-xl" />;
 
 // --- Types ---
-
-
 interface FinancialData {
     month: string;
     revenue: number;
@@ -710,7 +716,246 @@ const CURRICULUM_HEALTH = [
 
 
 
-// --- Components ---
+// --- Placements Specific Types & Data ---
+
+interface PlacementKPI {
+    id: string;
+    label: string;
+    value: string;
+    sub: string;
+    icon: any;
+    color: string;
+    trend?: { value: string; isUp: boolean };
+}
+
+interface UpcomingDrive {
+    id: number;
+    company: string;
+    date: string;
+    branches: string[];
+    minCGPA: number;
+    status: 'Upcoming' | 'Ongoing' | 'Completed';
+}
+
+interface TopRecruiter {
+    name: string;
+    offers: number;
+    avgPackage: string;
+}
+
+interface PackageBand {
+    range: string;
+    count: number;
+}
+
+interface PlacementTrend {
+    year: string;
+    percentage: number;
+}
+
+// --- Announcement Types ---
+interface AnnouncementKPI {
+    id: string;
+    label: string;
+    value: string;
+    sub: string;
+    icon: any;
+    color: string;
+    trend?: { value: string; isUp: boolean };
+}
+
+interface AnnouncementItem {
+    id: string;
+    title: string;
+    content: string;
+    audience: 'All' | 'Students' | 'Staff' | 'Dept';
+    priority: 'Normal' | 'Important' | 'Urgent';
+    status: 'Published' | 'Draft';
+    date: string;
+    reach: string;
+}
+
+interface AudienceDist {
+    name: string;
+    value: number;
+    fill: string;
+}
+
+interface AnnouncementStat {
+    month: string;
+    count: number;
+}
+
+interface AnnouncementAlert {
+    id: string;
+    title: string;
+    desc: string;
+    type: 'CRITICAL' | 'WARNING' | 'INFO';
+    time: string;
+}
+
+interface ReportKPI {
+    id: string;
+    label: string;
+    value: string;
+    subtext: string;
+    icon: any;
+    color: string;
+}
+
+interface ModuleReport {
+    id: string;
+    module: string;
+    desc: string;
+    lastGenerated: string;
+    icon: any;
+}
+
+interface RecentDownload {
+    id: string;
+    name: string;
+    module: string;
+    generatedBy: string;
+    dateTime: string;
+    format: 'PDF' | 'EXCEL';
+}
+
+interface DeptPlacement {
+    dept: string;
+    eligible: number;
+    placed: number;
+    rate: number;
+    avgPackage: string;
+}
+
+interface PlacementAlert {
+    id: number;
+    title: string;
+    type: 'WARNING' | 'INFO' | 'CRITICAL';
+    time: string;
+    desc: string;
+}
+
+const PLACEMENT_KPIS: PlacementKPI[] = [
+    { id: 'placed', label: 'Students Placed', value: '3,842', sub: 'Calculated this academic year', icon: Award, color: 'text-amber-500', trend: { value: '+420 vs last year', isUp: true } },
+    { id: 'rate', label: 'Placement Rate', value: '84.6%', sub: 'Overall institution average', icon: TrendingUp, color: 'text-emerald-500', trend: { value: '+2.4% improvement', isUp: true } },
+    { id: 'package', label: 'Avg Package', value: '₹7.2 LPA', sub: 'Top 10% average ₹18.4 LPA', icon: Briefcase, color: 'text-blue-500', trend: { value: '+₹0.8L increase', isUp: true } },
+    { id: 'companies', label: 'Companies Visited', value: '124', sub: 'This year enrollment', icon: Building, color: 'text-purple-500', trend: { value: '12 new partners', isUp: true } },
+];
+
+const UPCOMING_DRIVES_DATA: UpcomingDrive[] = [
+    { id: 1, company: 'TCS', date: '12/03/2026', branches: ['CS', 'IT', 'ECE'], minCGPA: 7.0, status: 'Upcoming' },
+    { id: 2, company: 'Infosys', date: '15/03/2026', branches: ['All B.Tech'], minCGPA: 6.5, status: 'Upcoming' },
+    { id: 3, company: 'Wipro', date: '18/03/2026', branches: ['CS', 'IT', 'ECE'], minCGPA: 6.0, status: 'Ongoing' },
+    { id: 4, company: 'Amazon', date: '22/03/2026', branches: ['CS', 'IT'], minCGPA: 8.5, status: 'Upcoming' },
+    { id: 5, company: 'Zoho', date: '05/03/2026', branches: ['CS', 'IT', 'MCA'], minCGPA: 7.5, status: 'Completed' },
+];
+
+const TOP_RECRUITERS_DATA: TopRecruiter[] = [
+    { name: 'TCS', offers: 485, avgPackage: '4.5 LPA' },
+    { name: 'Infosys', offers: 320, avgPackage: '4.2 LPA' },
+    { name: 'Wipro', offers: 295, avgPackage: '4.0 LPA' },
+    { name: 'Amazon', offers: 42, avgPackage: '24.5 LPA' },
+    { name: 'Zoho', offers: 86, avgPackage: '8.2 LPA' },
+    { name: 'Cognizant', offers: 215, avgPackage: '4.8 LPA' },
+];
+
+const PACKAGE_DISTRIBUTION_DATA: PackageBand[] = [
+    { range: '3–5 LPA', count: 1840 },
+    { range: '5–8 LPA', count: 1250 },
+    { range: '8–12 LPA', count: 480 },
+    { range: '12+ LPA', count: 272 },
+];
+
+const PLACEMENT_TRENDS_DATA: PlacementTrend[] = [
+    { year: '2020', percentage: 76 },
+    { year: '2021', percentage: 72 }, // COVID impact
+    { year: '2022', percentage: 79 },
+    { year: '2023', percentage: 82 },
+    { year: '2024', percentage: 84.6 },
+];
+
+const DEPT_PLACEMENT_STATS_DATA: DeptPlacement[] = [
+    { dept: 'CS & Engg', eligible: 840, placed: 792, rate: 94.2, avgPackage: '8.4 LPA' },
+    { dept: 'IT', eligible: 420, placed: 386, rate: 91.9, avgPackage: '7.8 LPA' },
+    { dept: 'ECE', eligible: 560, placed: 482, rate: 86.1, avgPackage: '6.5 LPA' },
+    { dept: 'Mechanical', eligible: 480, placed: 312, rate: 65, avgPackage: '5.2 LPA' },
+    { dept: 'Civil', eligible: 320, placed: 184, rate: 57.5, avgPackage: '4.8 LPA' },
+    { dept: 'MBA', eligible: 360, placed: 332, rate: 92.2, avgPackage: '9.2 LPA' },
+    { dept: 'MCA', eligible: 280, placed: 246, rate: 87.8, avgPackage: '6.8 LPA' },
+];
+
+const PLACEMENT_ALERTS: PlacementAlert[] = [
+    { id: 1, title: 'TCS drive registration closes in 2 days', type: 'WARNING', time: '2h ago', desc: 'Ensure all eligible CSE/IT students have uploaded their updated resumes.' },
+    { id: 2, title: '12 students yet to update offer status', type: 'INFO', time: '5h ago', desc: 'Pending verification for Amazon and Zoho off-campus drives.' },
+    { id: 3, title: 'Critical: Infrastructure check for upcoming drive', type: 'CRITICAL', time: '1d ago', desc: 'Lab 4 and 5 need system updates for the Cocubes assessment.' },
+];
+
+// --- Announcement Mock Data ---
+const ANNOUNCEMENT_KPIS: AnnouncementKPI[] = [
+    { id: 'total', label: 'Total Announcements', value: '284', sub: 'Cumulative count this AY', icon: Megaphone, color: 'text-amber-500' },
+    { id: 'active', label: 'Active / Live', value: '12', sub: 'Currently visible in portals', icon: Zap, color: 'text-emerald-500', trend: { value: '4 expiring soon', isUp: false } },
+    { id: 'scheduled', label: 'Scheduled', value: '5', sub: 'Queued for future release', icon: Calendar, color: 'text-blue-500' },
+    { id: 'reach', label: 'Avg Reach/Target', value: '9,840', sub: 'Successful deliveries per post', icon: Users, color: 'text-purple-500', trend: { value: '+12% vs last sem', isUp: true } },
+];
+
+const ANNOUNCEMENTS_DATA: AnnouncementItem[] = [
+    { id: '1', title: 'Semester End Examination Schedule', content: 'The comprehensive schedule for the upcoming semester examinations has been released. Please check the exams portal for details.', audience: 'Students', priority: 'Urgent', status: 'Published', date: '08 Mar 2026', reach: '12.4k' },
+    { id: '2', title: 'New Faculty Orientation Program', content: 'A mandatory orientation session for all newly joined faculty members is scheduled for next Monday.', audience: 'Staff', priority: 'Important', status: 'Published', date: '07 Mar 2026', reach: '450' },
+    { id: '3', title: 'Campus Infrastructure Upgrade Notice', content: 'Phase 2 of the digital transformation project begins this weekend. Expect minor network outages.', audience: 'All', priority: 'Normal', status: 'Published', date: '06 Mar 2026', reach: '15.8k' },
+    { id: '4', title: 'Annual Cultural Fest - Proshow Lineup', content: 'Drafting the announcement for the upcoming cultural fest main events and performers.', audience: 'All', priority: 'Normal', status: 'Draft', date: '-', reach: '0' },
+    { id: '5', title: 'Special Scholarship for Research Excellence', content: 'Applications invited for the annual research grant. Open to PG students of all departments.', audience: 'Students', priority: 'Important', status: 'Published', date: '04 Mar 2026', reach: '2.1k' },
+    { id: '6', title: 'Draft: Departmental Audit Schedule', content: 'Preparation of the audit schedule for ME and CE departments.', audience: 'Dept', priority: 'Important', status: 'Draft', date: '-', reach: '0' },
+];
+
+const AUDIENCE_BREAKDOWN_DATA: AudienceDist[] = [
+    { name: 'Students', value: 58, fill: '#f59e0b' },
+    { name: 'Staff', value: 27, fill: '#10b981' },
+    { name: 'All Portals', value: 15, fill: '#3b82f6' },
+];
+
+const MONTHLY_ANNOUNCEMENTS_DATA: AnnouncementStat[] = [
+    { month: 'Oct', count: 42 },
+    { month: 'Nov', count: 38 },
+    { month: 'Dec', count: 25 },
+    { month: 'Jan', count: 54 },
+    { month: 'Feb', count: 48 },
+    { month: 'Mar', count: 12 },
+];
+
+const ANNOUNCEMENT_ALERTS: AnnouncementAlert[] = [
+    { id: '1', title: 'Pending Review', desc: '4 draft announcements require provost approval before publishing.', type: 'WARNING', time: '10m ago' },
+    { id: '2', title: 'System Maintenance', desc: 'Scheduled broadcast window at 2:00 AM tonight for server updates.', type: 'INFO', time: '1h ago' },
+    { id: '3', title: 'Delivery Failed', desc: 'Critical alert: 124 student portal push notifications failed to deliver.', type: 'CRITICAL', time: '3h ago' },
+];
+
+const REPORT_KPIS: ReportKPI[] = [
+    { id: '1', label: 'Reports Generated', value: '1,284', subtext: 'This academic year', icon: FileText, color: 'text-amber-500' },
+    { id: '2', label: 'Last Export', value: '10:42 AM', subtext: 'Today status: Success', icon: Clock, color: 'text-blue-500' },
+    { id: '3', label: 'Pending Scheduled', value: '3', subtext: 'Weekly auto-exports', icon: Calendar, color: 'text-emerald-500' },
+    { id: '4', label: 'Most Exported', value: 'Fee Mgmt', subtext: '242 total downloads', icon: Wallet, color: 'text-purple-500' },
+];
+
+const MODULE_REPORTS_DATA: ModuleReport[] = [
+    { id: '1', module: 'Student Overview', desc: 'Enrollment, performance & attendance summary', lastGenerated: '08 Mar 2026', icon: Users },
+    { id: '2', module: 'Staff Overview', desc: 'Faculty distribution, hierarchy & performance', lastGenerated: '07 Mar 2026', icon: UserCheck },
+    { id: '3', module: 'Academic', desc: 'Course completion, syllabus & credits audit', lastGenerated: '05 Mar 2026', icon: BookOpen },
+    { id: '4', module: 'Library', desc: 'Book circulation, fine collection & inventory', lastGenerated: '08 Mar 2026', icon: Library },
+    { id: '5', module: 'Fee Management', desc: 'Collection reports, pending dues & scholarships', lastGenerated: 'Today', icon: Wallet },
+    { id: '6', module: 'Examinations', desc: 'Result analysis, grade distribution & patterns', lastGenerated: '04 Mar 2026', icon: ClipboardCheck },
+    { id: '7', module: 'Timetable', desc: 'Class occupancy, faculty load & rescheduling', lastGenerated: '02 Mar 2026', icon: CalendarDays },
+    { id: '8', module: 'Placements', desc: 'Offer counts, CTC trends & recruiter mix', lastGenerated: 'Today', icon: Briefcase },
+    { id: '9', module: 'Attendance', desc: 'Daily trends, critical lows & department mix', lastGenerated: 'Today', icon: Activity },
+];
+
+const RECENT_DOWNLOADS_DATA: RecentDownload[] = [
+    { id: '1', name: 'Q1_Fee_Summary.pdf', module: 'Fee Management', generatedBy: 'Admin (Sai)', dateTime: 'Today, 10:42 AM', format: 'PDF' },
+    { id: '2', name: 'Semester_Attendance.xlsx', module: 'Attendance', generatedBy: 'System (Auto)', dateTime: 'Today, 09:15 AM', format: 'EXCEL' },
+    { id: '3', name: 'Placement_CTC_Analysis.pdf', module: 'Placements', generatedBy: 'Admin (Sai)', dateTime: 'Yesterday, 04:30 PM', format: 'PDF' },
+    { id: '4', name: 'Faculty_Load_Chart.xlsx', module: 'Timetable', generatedBy: 'Dept Head (CSE)', dateTime: 'Yesterday, 11:20 AM', format: 'EXCEL' },
+    { id: '5', name: 'Library_Dues_List.pdf', module: 'Library', generatedBy: 'Librarian', dateTime: '06 Mar 2026, 02:45 PM', format: 'PDF' },
+    { id: '6', name: 'Student_Audit_V2.pdf', module: 'Student Overview', generatedBy: 'Admin (Sai)', dateTime: '05 Mar 2026, 12:10 PM', format: 'PDF' },
+];
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
@@ -2379,8 +2624,6 @@ const SemesterTable = ({ data }: { data: SemesterProgressRow[] }) => (
 );
 
 
-// --- Examinations Content ---
-
 const ExaminationsContent = ({ loading }: { loading: boolean }) => {
     const shouldSkipAnimations = useReducedMotion();
 
@@ -3430,6 +3673,1140 @@ const TimetableContent = ({
     );
 };
 
+// --- Placements Section Content ---
+
+const PlacementsContent = ({ loading }: { loading: boolean }) => {
+    const shouldSkipAnimations = useReducedMotion();
+    const [deptTab, setDeptTab] = useState('All');
+
+    if (loading) {
+        return (
+            <div className="space-y-6 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl bg-slate-200 dark:bg-white/5" />)}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Skeleton className="h-[400px] w-full rounded-xl bg-slate-200 dark:bg-white/5" />
+                    <Skeleton className="h-[400px] w-full rounded-xl bg-slate-200 dark:bg-white/5" />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Skeleton className="h-[350px] w-full rounded-xl bg-slate-200 dark:bg-white/5" />
+                    <Skeleton className="h-[350px] w-full rounded-xl bg-slate-200 dark:bg-white/5" />
+                </div>
+                <Skeleton className="h-[500px] w-full rounded-xl bg-slate-200 dark:bg-white/5" />
+            </div>
+        );
+    }
+
+    const filteredDeptStats = DEPT_PLACEMENT_STATS_DATA.filter(stat => {
+        if (deptTab === 'All') return true;
+        if (deptTab === 'Above 80%') return stat.rate >= 80;
+        if (deptTab === 'Below 60%') return stat.rate < 60;
+        return true;
+    });
+
+    return (
+        <motion.div
+            variants={staggerContainer}
+            initial={shouldSkipAnimations ? "visible" : "hidden"}
+            animate="visible"
+            className="space-y-6 pt-4"
+        >
+            {/* ROW 1 — PLACEMENT KPI CARDS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {PLACEMENT_KPIS.map((kpi) => (
+                    <motion.div key={kpi.id} variants={fadeSlideUp}>
+                        <Card className="bg-[hsl(var(--surface-raised))] border-border border-l-4 border-l-amber-500 shadow-md rounded-xl p-5 transition-all hover:shadow-lg h-full group">
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="p-2.5 rounded-xl bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
+                                    <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
+                                </div>
+                                <div className={`flex items-center gap-1 text-[10px] font-bold ${kpi.trend?.isUp ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : 'text-amber-600 dark:text-amber-400 bg-amber-500/10'} px-2 py-0.5 rounded-full`}>
+                                    {kpi.trend?.isUp ? <ArrowUpRight className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
+                                    {kpi.trend?.value}
+                                </div>
+                            </div>
+                            <div className="space-y-0.5">
+                                <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{kpi.value}</h3>
+                                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{kpi.label}</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium pt-1">{kpi.sub}</p>
+                            </div>
+                        </Card>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* ROW 2 — UPCOMING DRIVES + TOP RECRUITERS */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Upcoming Drives Table */}
+                <motion.div variants={fadeSlideUp} className="lg:col-span-2">
+                    <Card className="bg-[hsl(var(--surface-raised))] border-border shadow-md rounded-xl overflow-hidden h-full">
+                        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border/50">
+                            <div className="space-y-0.5">
+                                <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                                    <Calendar className="w-5 h-5 text-amber-500" />
+                                    Upcoming Recruitment Drives
+                                </CardTitle>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active Schedule · {new Date().getFullYear()}</p>
+                            </div>
+                            <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:bg-amber-500/5">View Calendar →</Button>
+                        </CardHeader>
+                        <CardContent className="p-0 overflow-x-auto custom-scrollbar">
+                            <Table>
+                                <TableHeader className="bg-slate-50/50 dark:bg-white/[0.02]">
+                                    <TableRow className="border-border">
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Company</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Date</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Eligibility</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">CGPA</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {UPCOMING_DRIVES_DATA.map((drive) => (
+                                        <TableRow key={drive.id} className="border-border hover:bg-amber-500/5 transition-colors group">
+                                            <TableCell className="py-4">
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors uppercase tracking-tight">{drive.company}</p>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-3 h-3 text-amber-500" />
+                                                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 tabular-nums">{drive.date}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {drive.branches.map(b => (
+                                                        <Badge key={b} variant="outline" className="text-[9px] font-bold border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 bg-transparent">
+                                                            {b}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-xs font-black text-slate-700 dark:text-slate-300 tabular-nums">{drive.minCGPA}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Badge className={`border-none text-[9px] font-black uppercase tracking-tight ${
+                                                    drive.status === 'Ongoing' ? 'bg-emerald-500/10 text-emerald-600' :
+                                                    drive.status === 'Completed' ? 'bg-slate-500/10 text-slate-600' :
+                                                    'bg-amber-500/10 text-amber-600'
+                                                }`}>
+                                                    {drive.status}
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                {/* Top Recruiters Grid */}
+                <motion.div variants={fadeSlideUp} className="lg:col-span-1">
+                    <Card className="bg-[hsl(var(--surface-raised))] border-border shadow-md rounded-xl h-full flex flex-col">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <Star className="w-5 h-5 text-amber-500 saturate-150" />
+                                Top Hiring Partners
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1">
+                            <div className="grid grid-cols-2 gap-3">
+                                {TOP_RECRUITERS_DATA.map((recruiter) => (
+                                    <div key={recruiter.name} className="p-4 rounded-xl border border-border bg-slate-50/50 dark:bg-white/[0.01] hover:bg-white/[0.03] hover:border-amber-500/30 transition-all group flex flex-col items-center text-center">
+                                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/5 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Building2 className="w-5 h-5 text-slate-400 group-hover:text-amber-500" />
+                                        </div>
+                                        <p className="text-xs font-black text-slate-900 dark:text-white mb-1 uppercase tracking-tighter">{recruiter.name}</p>
+                                        <div className="space-y-0.5">
+                                            <p className="text-[10px] font-bold text-emerald-600">{recruiter.offers} OFFERS</p>
+                                            <p className="text-[9px] font-medium text-slate-500 uppercase">Avg: {recruiter.avgPackage}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <Button variant="outline" className="w-full mt-6 h-10 text-[10px] font-black uppercase tracking-widest border-border hover:bg-amber-500/5 hover:border-amber-500/30 transition-all rounded-xl">
+                                Detailed Recruiter Analysis
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div>
+
+            {/* ROW 3 — CHARTS: PACKAGE BANDS + PLACEMENT TREND */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Package Distribution Bar Chart */}
+                <motion.div variants={fadeSlideUp}>
+                    <Card className="bg-[hsl(var(--surface-raised))] border-border shadow-md rounded-xl h-full">
+                        <CardHeader>
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <BarChart3 className="w-5 h-5 text-amber-500" />
+                                Package Bands Distribution
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-[300px] w-full mt-2">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RechartsBarChart data={PACKAGE_DISTRIBUTION_DATA} margin={{ top: 20 }}>
+                                        <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fill: 'currentColor', fontSize: 11, fontWeight: 700 }} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'currentColor', fontSize: 11 }} />
+                                        <RechartsTooltip 
+                                            cursor={{ fill: 'rgba(251,191,36,0.05)' }}
+                                            contentStyle={{ backgroundColor: 'hsl(var(--surface-raised))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}
+                                        />
+                                        <Bar dataKey="count" name="Students" fill="#f59e0b" radius={[8, 8, 0, 0]} barSize={50} />
+                                    </RechartsBarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                {/* 5-Year Placement Trend Line Chart */}
+                <motion.div variants={fadeSlideUp}>
+                    <Card className="bg-[hsl(var(--surface-raised))] border-border shadow-md rounded-xl h-full">
+                        <CardHeader>
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-amber-500" />
+                                5-Year Placement Trend (%)
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-[300px] w-full mt-2">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RechartsLineChart data={PLACEMENT_TRENDS_DATA}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                                        <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fill: 'currentColor', fontSize: 11, fontWeight: 700 }} />
+                                        <YAxis domain={[70, 100]} axisLine={false} tickLine={false} tick={{ fill: 'currentColor', fontSize: 11 }} />
+                                        <RechartsTooltip 
+                                            contentStyle={{ backgroundColor: 'hsl(var(--surface-raised))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}
+                                        />
+                                        <Line type="monotone" dataKey="percentage" name="Placement Rate" stroke="#f59e0b" strokeWidth={4} dot={{ r: 6, fill: '#f59e0b', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8 }} />
+                                    </RechartsLineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div>
+
+            {/* ROW 4 — DEPT TABLE + DONUT CHART */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Departmental Table with Tabs */}
+                <motion.div variants={fadeSlideUp} className="lg:col-span-2">
+                    <Card className="bg-[hsl(var(--surface-raised))] border-border shadow-md rounded-xl overflow-hidden h-full flex flex-col">
+                        <CardHeader className="pb-0 border-b border-border/50">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
+                                <div className="space-y-0.5">
+                                    <CardTitle className="text-base font-bold">Department Placement Audit</CardTitle>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Live Comparison · AY 2024–25</p>
+                                </div>
+                                <div className="flex p-1 bg-slate-100 dark:bg-white/5 rounded-xl">
+                                    {['All', 'Above 80%', 'Below 60%'].map((t) => (
+                                        <button
+                                            key={t}
+                                            onClick={() => setDeptTab(t)}
+                                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+                                                deptTab === t 
+                                                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
+                                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                            }`}
+                                        >
+                                            {t}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0 flex-1 overflow-x-auto custom-scrollbar">
+                            <Table>
+                                <TableHeader className="bg-slate-50/50 dark:bg-white/[0.02]">
+                                    <TableRow className="border-border hover:bg-transparent">
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Department</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Eligible</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Placed</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest">Rate %</TableHead>
+                                        <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Avg Package</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredDeptStats.length > 0 ? filteredDeptStats.map((row) => (
+                                        <TableRow key={row.dept} className="border-border hover:bg-amber-500/5 transition-colors group">
+                                            <TableCell className="py-4 font-bold text-slate-900 dark:text-white uppercase tracking-tight">{row.dept}</TableCell>
+                                            <TableCell className="text-sm font-bold tabular-nums text-slate-600 dark:text-slate-400">{row.eligible}</TableCell>
+                                            <TableCell className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{row.placed}</TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3 min-w-[100px]">
+                                                    <span className={`text-[11px] font-black w-10 ${row.rate >= 80 ? 'text-emerald-600' : row.rate < 60 ? 'text-red-500' : 'text-amber-600'}`}>{row.rate}%</span>
+                                                    <Progress value={row.rate} className={`h-1.5 flex-1 ${row.rate >= 80 ? '[&>div]:bg-emerald-500' : row.rate < 60 ? '[&>div]:bg-red-500' : '[&>div]:bg-amber-500'}`} />
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right font-black text-slate-900 dark:text-white tabular-nums">{row.avgPackage}</TableCell>
+                                        </TableRow>
+                                    )) : (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="py-20 text-center font-bold text-slate-400 uppercase tracking-widest">No matching departments found</TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                {/* Overall Distribution Donut Chart */}
+                <motion.div variants={fadeSlideUp} className="lg:col-span-1">
+                    <Card className="bg-[hsl(var(--surface-raised))] border-border shadow-md rounded-xl h-full flex flex-col">
+                        <CardHeader>
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <PieChartIcon className="w-5 h-5 text-amber-500" />
+                                Hiring Category Mix
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 flex flex-col items-center justify-around pb-6">
+                            <div className="relative w-full h-[220px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RechartsPieChart>
+                                        <Pie
+                                            data={[
+                                                { name: 'Core', value: 45, fill: '#f59e0b' },
+                                                { name: 'IT/Service', value: 35, fill: '#10b981' },
+                                                { name: 'Product', value: 20, fill: '#3b82f6' },
+                                            ]}
+                                            innerRadius={60}
+                                            outerRadius={90}
+                                            paddingAngle={8}
+                                            dataKey="value"
+                                            stroke="none"
+                                        >
+                                            <Cell fill="#f59e0b" />
+                                            <Cell fill="#10b981" />
+                                            <Cell fill="#3b82f6" />
+                                        </Pie>
+                                        <RechartsTooltip />
+                                    </RechartsPieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <span className="text-2xl font-black text-slate-900 dark:text-white">124</span>
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Companies</span>
+                                </div>
+                            </div>
+                            <div className="w-full space-y-3 mt-4">
+                                {[
+                                    { label: 'Core Engineering', value: '45%', color: 'bg-amber-500' },
+                                    { label: 'IT Services', value: '35%', color: 'bg-emerald-500' },
+                                    { label: 'Product Based', value: '20%', color: 'bg-blue-500' },
+                                ].map((item, i) => (
+                                    <div key={i} className="flex justify-between items-center group">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
+                                            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">{item.label}</span>
+                                        </div>
+                                        <span className="text-[11px] font-black text-slate-900 dark:text-white">{item.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div>
+
+            {/* ROW 5 — ACTIONS + ALERTS */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+                <motion.div variants={fadeSlideUp}>
+                    <Card className="bg-[hsl(var(--surface-raised))] border-border shadow-md rounded-xl h-full flex flex-col">
+                        <CardHeader>
+                            <CardTitle className="text-base font-bold">Placement Cell Actions</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {[
+                                { label: 'New Drive Intent', icon: Zap, sub: 'Invite company for campus hiring', color: 'text-amber-500', bg: 'bg-amber-500/10' },
+                                { label: 'Export Stat Report', icon: FileText, sub: 'PDF/Excel for annual audit', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                                { label: 'Student Shortlist', icon: Users, sub: 'View/Edit eligible candidates', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+                                { label: 'Offer Verification', icon: CheckCircle2, sub: 'Verify 84 pending selections', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                            ].map((action, i) => (
+                                <Button 
+                                    key={i} 
+                                    variant="outline" 
+                                    className="h-auto p-4 justify-start text-left border-border bg-slate-50 dark:bg-white/[0.02] hover:bg-amber-500/5 hover:border-amber-500/30 transition-all rounded-xl group"
+                                >
+                                    <div className={`p-2.5 rounded-xl ${action.bg} ${action.color} mr-4 group-hover:scale-110 transition-transform`}>
+                                        <action.icon className="w-5 h-5" />
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{action.label}</span>
+                                        <p className="text-[10px] text-muted-foreground font-medium">{action.sub}</p>
+                                    </div>
+                                </Button>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <motion.div variants={fadeSlideUp}>
+                    <Card className="bg-[hsl(var(--surface-raised))] border-border shadow-md rounded-xl h-full flex flex-col">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-base font-bold">Placement Alerts</CardTitle>
+                            <Bell className="w-5 h-5 text-amber-500 animate-ring" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {PLACEMENT_ALERTS.map((alert) => (
+                                <div key={alert.id} className="flex gap-4 p-4 rounded-xl border border-border bg-slate-50/50 dark:bg-white/[0.01] hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                                    <div className="shrink-0 pt-1">
+                                        <div className={`w-2.5 h-2.5 rounded-full ${alert.type === 'CRITICAL' ? 'bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]' : alert.type === 'WARNING' ? 'bg-amber-500' : 'bg-blue-500'} `} />
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex justify-between items-start">
+                                            <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors uppercase tracking-tight">{alert.title}</h4>
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">{alert.time}</span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-bold">
+                                            {alert.desc}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div>
+        </motion.div>
+    );
+};
+
+const ReportsContent = ({ loading }: { loading: boolean }) => {
+    const shouldSkipAnimations = useReducedMotion();
+
+    if (loading) {
+        return (
+            <div className="space-y-6 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl bg-slate-200 dark:bg-white/5" />)}
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-10 w-48 rounded-lg bg-slate-200 dark:bg-white/5" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-64 rounded-xl bg-slate-200 dark:bg-white/5" />)}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <motion.div
+            initial={shouldSkipAnimations ? { opacity: 1 } : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-6 pt-4 pb-12"
+        >
+            {/* ROW 1 — KPI CARDS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {REPORT_KPIS.map((kpi, index) => (
+                    <motion.div
+                        key={kpi.id}
+                        initial={shouldSkipAnimations ? { opacity: 1 } : { opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                    >
+                        <Card className="bg-card border-border shadow-md hover:shadow-lg transition-all rounded-xl border-b-4 border-b-amber-500/10">
+                            <CardContent className="p-5">
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{kpi.label}</p>
+                                        <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">{kpi.value}</h3>
+                                        <p className="text-[10px] items-center flex gap-1 font-bold text-slate-400">
+                                            {kpi.subtext}
+                                        </p>
+                                    </div>
+                                    <div className={`p-3 rounded-xl bg-slate-100 dark:bg-white/5 ${kpi.color}`}>
+                                        <kpi.icon className="w-5 h-5" />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* ROW 2 — MODULE REPORTS GRID */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-base font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight">Module Reports</h2>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Select a module to export data</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {MODULE_REPORTS_DATA.map((module, index) => (
+                        <motion.div
+                            key={module.id}
+                            initial={shouldSkipAnimations ? { opacity: 1 } : { opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.1 + index * 0.05 }}
+                        >
+                            <Card className="bg-card border-border shadow-md hover:shadow-lg transition-all rounded-xl overflow-hidden group">
+                                <CardContent className="p-6 space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
+                                            <module.icon className="w-6 h-6" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">{module.module}</h4>
+                                            <p className="text-[10px] text-muted-foreground font-bold italic">Last generated: {module.lastGenerated}</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold leading-relaxed min-h-[32px]">
+                                        {module.desc}
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-3 pt-2">
+                                        <Button 
+                                            onClick={() => toast.info("Report download will be available once backend is connected.")}
+                                            className="h-11 bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl gap-2 shadow-lg shadow-amber-500/20"
+                                        >
+                                            <Download className="w-3.5 h-3.5" />
+                                            PDF
+                                        </Button>
+                                        <Button 
+                                            onClick={() => toast.info("Report download will be available once backend is connected.")}
+                                            variant="outline" 
+                                            className="h-11 border-border font-black uppercase tracking-widest text-[10px] rounded-xl gap-2 hover:bg-slate-50 dark:hover:bg-white/5"
+                                        >
+                                            <FileText className="w-3.5 h-3.5" />
+                                            Excel
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* ROW 3 — RECENT DOWNLOADS */}
+            <motion.div variants={fadeSlideUp}>
+                <Card className="bg-card border-border shadow-md rounded-xl overflow-hidden">
+                    <CardHeader className="border-b border-border/50 pb-4">
+                        <CardTitle className="text-base font-bold flex items-center gap-2">
+                            <RefreshCw className="w-5 h-5 text-amber-500" />
+                            Recent Downloads
+                        </CardTitle>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Audit log of institutional exports</p>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent border-border/50 bg-slate-50/50 dark:bg-white/[0.02]">
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-6">Report Name</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500">Module</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500">Generated By</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500">Date & Time</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Format</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-right px-6">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {RECENT_DOWNLOADS_DATA.length > 0 ? (
+                                    RECENT_DOWNLOADS_DATA.map((row) => (
+                                        <TableRow key={row.id} className="border-border/50 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors group">
+                                            <TableCell className="px-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${row.format === 'PDF' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                                                        <FileText className="w-4 h-4" />
+                                                    </div>
+                                                    <span className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-amber-500 transition-colors">{row.name}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">{row.module}</TableCell>
+                                            <TableCell className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">{row.generatedBy}</TableCell>
+                                            <TableCell className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{row.dateTime}</TableCell>
+                                            <TableCell className="text-center">
+                                                <Badge className={`${row.format === 'PDF' ? 'bg-red-500/10 text-red-600' : 'bg-emerald-500/10 text-emerald-600'} border-none text-[9px] font-black uppercase tracking-tighter`}>
+                                                    {row.format}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right px-6">
+                                                <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-amber-500/10 hover:text-amber-500 transition-all">
+                                                    <RefreshCw className="w-4 h-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="h-40 text-center">
+                                            <div className="space-y-2">
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No recent downloads found</p>
+                                                <p className="text-[10px] text-slate-500 italic">History will appear here after your first export.</p>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </motion.div>
+
+            {/* ROW 4 — QUICK ACTIONS */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <Button 
+                    className="lg:col-span-1 h-12 bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-amber-500/20 transition-all gap-2"
+                    onClick={() => toast.info("Batch generation pending backend.")}
+                >
+                    <Zap className="w-4 h-4" />
+                    Generate All
+                </Button>
+                <Button 
+                    variant="outline" 
+                    className="lg:col-span-1 h-12 border-border font-black uppercase tracking-widest rounded-xl transition-all gap-2 hover:bg-slate-50 dark:hover:bg-white/5"
+                    onClick={() => toast.info("Scheduler configuration pending.")}
+                >
+                    <Calendar className="w-4 h-4" />
+                    Schedule Export
+                </Button>
+                <Button 
+                    variant="outline" 
+                    className="lg:col-span-1 h-12 border-border text-red-500 hover:text-red-600 hover:bg-red-50/50 dark:hover:bg-red-500/5 font-black uppercase tracking-widest rounded-xl transition-all gap-2"
+                >
+                    <Trash2 className="w-4 h-4" />
+                    Clear History
+                </Button>
+                <div className="lg:col-span-1 flex items-center gap-3 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                    <Info className="w-4 h-4 text-blue-500 shrink-0" />
+                    <p className="text-[9px] font-bold text-blue-600 dark:text-blue-400 leading-tight uppercase tracking-tighter">
+                        Reports are generated from live demo data. Backend persistence pending.
+                    </p>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+// --- ANNOUNCEMENTS COMPONENT ---
+const AnnouncementsContent = ({ loading }: { loading: boolean }) => {
+    if (loading) return <div className="p-8 text-center text-slate-500 animate-pulse">Loading announcements...</div>;
+
+    const [audience, setAudience] = useState('All Portals');
+    const [priority, setPriority] = useState('Normal');
+    const [activeTab, setActiveTab] = useState('All');
+
+    const filteredAnnouncements = activeTab === 'All' 
+        ? ANNOUNCEMENTS_DATA 
+        : ANNOUNCEMENTS_DATA.filter((a: any) => a.status === activeTab);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+        >
+            {/* ROW 1 — KPIS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {ANNOUNCEMENT_KPIS.map((kpi) => (
+                    <motion.div key={kpi.id} variants={fadeSlideUp}>
+                        <Card className="bg-card border-border border-l-4 border-l-amber-500 shadow-sm rounded-xl p-5 hover:shadow-md transition-all group">
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="p-2.5 rounded-xl bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors text-amber-500">
+                                    <kpi.icon className="w-5 h-5" />
+                                </div>
+                                {kpi.trend && (
+                                    <div className={`flex items-center gap-1 text-[10px] font-bold ${kpi.trend.isUp ? 'text-emerald-600 bg-emerald-500/10' : 'text-amber-600 bg-amber-500/10'} px-2 py-0.5 rounded-full uppercase tracking-tight`}>
+                                        {kpi.trend.isUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                        {kpi.trend.value}
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{kpi.value}</h3>
+                                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 uppercase tracking-widest">{kpi.label}</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium pt-1.5">{kpi.sub}</p>
+                            </div>
+                        </Card>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* ROW 2 — COMPOSE PANEL */}
+            <motion.div variants={fadeSlideUp}>
+                <Card className="bg-card border-border shadow-md rounded-xl overflow-hidden">
+                    <CardHeader className="border-b border-border/50 pb-4">
+                        <CardTitle className="text-base font-bold flex items-center gap-2">
+                            <Plus className="w-5 h-5 text-amber-500" />
+                            Compose New Announcement
+                        </CardTitle>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Broadcast to institutional portals</p>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Title & Audience */}
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Announcement Title</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="e.g. Semester Results / Holiday Notice" 
+                                        className="w-full bg-slate-50 dark:bg-white/[0.03] border border-border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Target Audience</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['All Portals', 'Students Only', 'Staff Only', 'By Department'].map((pill) => (
+                                            <button
+                                                key={pill}
+                                                onClick={() => setAudience(pill)}
+                                                className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all border ${
+                                                    audience === pill 
+                                                    ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20' 
+                                                    : 'bg-transparent text-slate-500 border-border hover:border-amber-500/50'
+                                                }`}
+                                            >
+                                                {pill}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Priority & Delivery */}
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Priority Level</label>
+                                    <div className="flex p-1 bg-slate-100 dark:bg-white/5 rounded-xl w-fit">
+                                        {['Normal', 'Important', 'Urgent'].map((p) => (
+                                            <button
+                                                key={p}
+                                                onClick={() => setPriority(p)}
+                                                className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                                                    priority === p 
+                                                    ? (p === 'Urgent' ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : p === 'Important' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-lg shadow-slate-900/10')
+                                                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="space-y-2 pt-1">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Attachments (Optional)</label>
+                                    <div className="flex items-center gap-3 p-3 border-2 border-dashed border-border rounded-xl bg-slate-50/50 dark:bg-white/[0.01] hover:bg-slate-100 dark:hover:bg-white/[0.03] transition-all cursor-pointer group">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-white/5 flex items-center justify-center group-hover:bg-amber-500/10 group-hover:text-amber-500 transition-colors">
+                                            <Download className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">Click to upload PDFs or Images</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Message Content</label>
+                            <textarea 
+                                rows={4} 
+                                placeholder="Enter your announcement message here..." 
+                                className="w-full bg-slate-50 dark:bg-white/[0.03] border border-border rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-none"
+                            ></textarea>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-border/50">
+                            <Button className="w-full sm:w-auto px-8 h-12 bg-amber-500 hover:bg-amber-600 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] gap-2">
+                                <Zap className="w-4 h-4" />
+                                Publish Now
+                            </Button>
+                            <Button variant="outline" className="w-full sm:w-auto px-8 h-12 border-border hover:bg-slate-50 dark:hover:bg-white/5 font-black uppercase tracking-widest rounded-xl transition-all gap-2">
+                                <Save className="w-4 h-4" />
+                                Save as Draft
+                            </Button>
+                            <div className="hidden sm:block flex-1" />
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter italic">Auto-saving as draft...</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </motion.div>
+
+            {/* ROW 3 — ANNOUNCEMENTS LIST */}
+            <motion.div variants={fadeSlideUp}>
+                <Card className="bg-card border-border shadow-md rounded-xl overflow-hidden">
+                    <CardHeader className="border-b border-border/50 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <List className="w-5 h-5 text-amber-500" />
+                                Institutional Broadcasts
+                            </CardTitle>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Manage and track your announcements</p>
+                        </div>
+                        <div className="flex p-1 bg-slate-100 dark:bg-white/5 rounded-xl w-fit">
+                            {['All', 'Published', 'Draft'].map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`px-6 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                                        activeTab === tab 
+                                        ? 'bg-white dark:bg-slate-800 text-amber-500 shadow-sm' 
+                                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                    }`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="divide-y divide-border/50">
+                            {filteredAnnouncements.length > 0 ? (
+                                filteredAnnouncements.map((item) => (
+                                    <div key={item.id} className="p-4 sm:p-6 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors group">
+                                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                            <div className="space-y-2 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors uppercase tracking-tight">{item.title}</h4>
+                                                    <Badge className={`${
+                                                        item.priority === 'Urgent' ? 'bg-red-500/10 text-red-600' :
+                                                        item.priority === 'Important' ? 'bg-amber-500/10 text-amber-600' :
+                                                        'bg-blue-500/10 text-blue-600'
+                                                    } border-none text-[9px] font-black uppercase tracking-tight`}>
+                                                        {item.priority}
+                                                    </Badge>
+                                                    <Badge variant="outline" className="border-border text-slate-500 text-[9px] font-black uppercase tracking-tight">
+                                                        {item.audience}
+                                                    </Badge>
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold leading-relaxed line-clamp-2 max-w-3xl">
+                                                    {item.content}
+                                                </p>
+                                                <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pt-1">
+                                                    <span className="flex items-center gap-1.5 text-amber-500/80">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {item.status === 'Draft' ? 'Last modified:' : 'Published:'} {item.date}
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Users className="w-3 h-3" />
+                                                        Reach: {item.reach}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-amber-500/10 hover:text-amber-500 transition-all">
+                                                    <Edit3 className="w-4 h-4" />
+                                                </Button>
+                                                <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-20 text-center space-y-3">
+                                    <div className="w-16 h-16 bg-slate-50 dark:bg-white/5 rounded-2xl flex items-center justify-center mx-auto text-slate-300">
+                                        <Inbox className="w-8 h-8" />
+                                    </div>
+                                    <h5 className="font-bold text-slate-400 uppercase tracking-widest text-xs">No announcements found</h5>
+                                    <p className="text-[10px] text-slate-400 max-w-[200px] mx-auto font-medium leading-relaxed">Adjust your filters or compose a new message to get started.</p>
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                    {filteredAnnouncements.length > 0 && (
+                        <div className="p-4 border-t border-border/50 bg-slate-50/50 dark:bg-white/[0.01]">
+                            <Button variant="link" className="text-[10px] font-black uppercase tracking-widest text-amber-500 hover:text-amber-600 h-auto p-0 mx-auto block">
+                                View Full Archive History
+                            </Button>
+                        </div>
+                    )}
+                </Card>
+            </motion.div>
+
+            {/* ROW 4 — DATA VISUALIZATION */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Impact Trends (Bar Chart) */}
+                <motion.div variants={fadeSlideUp} className="lg:col-span-2">
+                    <Card className="bg-card border-border shadow-md rounded-xl h-full flex flex-col">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <BarChart3 className="w-5 h-5 text-amber-500" />
+                                Monthly Announcement Reach
+                            </CardTitle>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Total broadcasts sent (Last 6 Months)</p>
+                        </CardHeader>
+                        <CardContent className="flex-1 min-h-[300px] flex items-center justify-center">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <RechartsBarChart data={MONTHLY_ANNOUNCEMENTS_DATA} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                                    <XAxis 
+                                        dataKey="month" 
+                                        axisLine={false} 
+                                        tickLine={false} 
+                                        tick={{ fill: 'currentColor', opacity: 0.6, fontSize: 10, fontWeight: 700 }}
+                                        dy={10}
+                                    />
+                                    <YAxis 
+                                        axisLine={false} 
+                                        tickLine={false} 
+                                        tick={{ fill: 'currentColor', opacity: 0.6, fontSize: 10, fontWeight: 700 }}
+                                    />
+                                    <RechartsTooltip 
+                                        content={<CustomTooltip />} 
+                                        cursor={{ fill: 'rgba(245, 158, 11, 0.05)' }}
+                                    />
+                                    <Bar 
+                                        dataKey="count" 
+                                        fill="#f59e0b" 
+                                        radius={[6, 6, 0, 0]} 
+                                        barSize={32}
+                                    />
+                                </RechartsBarChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                {/* Audience Mix (Pie Chart) */}
+                <motion.div variants={fadeSlideUp} className="lg:col-span-1">
+                    <Card className="bg-card border-border shadow-md rounded-xl h-full flex flex-col">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <PieChartIcon className="w-5 h-5 text-amber-500" />
+                                Audience Distribution
+                            </CardTitle>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Engagement by portal type</p>
+                        </CardHeader>
+                        <CardContent className="flex-1 flex flex-col justify-center items-center">
+                            <div className="h-[240px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RechartsPieChart>
+                                        <Pie
+                                            data={AUDIENCE_BREAKDOWN_DATA}
+                                            innerRadius={60}
+                                            outerRadius={80}
+                                            paddingAngle={8}
+                                            dataKey="value"
+                                        >
+                                            {AUDIENCE_BREAKDOWN_DATA.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.fill} stroke="none" />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip content={<CustomTooltip />} />
+                                    </RechartsPieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="w-full space-y-2 px-2 mt-4">
+                                {AUDIENCE_BREAKDOWN_DATA.map((item, i) => (
+                                    <div key={i} className="flex justify-between items-center group">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.fill }} />
+                                            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">{item.name}</span>
+                                        </div>
+                                        <span className="text-[11px] font-black text-slate-900 dark:text-white">{item.value}%</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div>
+
+            {/* ROW 5 — ACTIONS & ALERTS */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <motion.div variants={fadeSlideUp}>
+                    <Card className="bg-card border-border shadow-md rounded-xl h-full flex flex-col">
+                        <CardHeader>
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <Zap className="w-5 h-5 text-amber-500" />
+                                Quick Management
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {[
+                                { label: 'Pin Announcement', icon: Pin, sub: 'Stick to top of user feeds', color: 'text-amber-500', bg: 'bg-amber-500/10' },
+                                { label: 'Archive Expired', icon: Archive, sub: 'Cleanup 12 inactive notices', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                                { label: 'Broadcast SMS', icon: Smartphone, sub: 'Direct reach for emergencies', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+                                { label: 'Reach Report', icon: FileText, sub: 'Download detailed audit log', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                            ].map((action, i) => (
+                                <Button 
+                                    key={i} 
+                                    variant="outline" 
+                                    className="h-auto p-4 justify-start text-left border-border bg-slate-50 dark:bg-white/[0.02] hover:bg-amber-500/5 hover:border-amber-500/30 transition-all rounded-xl group"
+                                >
+                                    <div className={`p-2.5 rounded-xl ${action.bg} ${action.color} mr-4 group-hover:scale-110 transition-transform`}>
+                                        <action.icon className="w-5 h-5" />
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{action.label}</span>
+                                        <p className="text-[10px] text-muted-foreground font-medium">{action.sub}</p>
+                                    </div>
+                                </Button>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <motion.div variants={fadeSlideUp}>
+                    <Card className="bg-[hsl(var(--surface-raised))] border-border shadow-md rounded-xl h-full flex flex-col">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-base font-bold">System Alerts</CardTitle>
+                            <Bell className="w-5 h-5 text-amber-500 animate-ring" />
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {ANNOUNCEMENT_ALERTS.map((alert) => (
+                                <div key={alert.id} className="flex gap-4 p-4 rounded-xl border border-border bg-slate-50/50 dark:bg-white/[0.01] hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                                    <div className="shrink-0 pt-1">
+                                        <div className={`w-2.5 h-2.5 rounded-full ${alert.type === 'CRITICAL' ? 'bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]' : alert.type === 'WARNING' ? 'bg-amber-500' : 'bg-blue-500'} `} />
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex justify-between items-start">
+                                            <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors uppercase tracking-tight">{alert.title}</h4>
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">{alert.time}</span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-bold">
+                                            {alert.desc}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div>
+        </motion.div>
+    );
+};const MergedPeopleSection = ({ loadingStudent, loadingStaff }: { loadingStudent: boolean, loadingStaff: boolean }) => {
+    const [activeTab, setActiveTab] = useState<'students' | 'staff'>('students');
+    return (
+        <div className="space-y-6 pt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">
+                    People — {activeTab === 'students' ? 'Student Overview' : 'Staff Overview'}
+                </h2>
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-full w-fit max-w-full overflow-x-auto custom-scrollbar">
+                    <button
+                        onClick={() => setActiveTab('students')}
+                        className={`min-h-[44px] transition-all whitespace-nowrap ${activeTab === 'students' ? 'bg-amber-500 text-black font-semibold rounded-full px-4 py-1.5' : 'text-muted-foreground hover:bg-muted rounded-full px-4 py-1.5'}`}
+                    >
+                        Students
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('staff')}
+                        className={`min-h-[44px] transition-all whitespace-nowrap ${activeTab === 'staff' ? 'bg-amber-500 text-black font-semibold rounded-full px-4 py-1.5' : 'text-muted-foreground hover:bg-muted rounded-full px-4 py-1.5'}`}
+                    >
+                        Staff
+                    </button>
+                </div>
+            </div>
+            
+            {activeTab === 'students' ? (
+                <StudentOverviewContent loading={loadingStudent} />
+            ) : (
+                <StaffOverviewContent loading={loadingStaff} />
+            )}
+        </div>
+    );
+};
+
+const MergedAcademicExamsSection = ({ loadingAcademic, loadingExaminations }: { loadingAcademic: boolean, loadingExaminations: boolean }) => {
+    const [activeTab, setActiveTab] = useState<'academic' | 'examinations'>('academic');
+    return (
+        <div className="space-y-6 pt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">
+                    Academic & Exams — {activeTab === 'academic' ? 'Academic' : 'Examinations'}
+                </h2>
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-full w-fit max-w-full overflow-x-auto custom-scrollbar">
+                    <button
+                        onClick={() => setActiveTab('academic')}
+                        className={`min-h-[44px] transition-all whitespace-nowrap ${activeTab === 'academic' ? 'bg-amber-500 text-black font-semibold rounded-full px-4 py-1.5' : 'text-muted-foreground hover:bg-muted rounded-full px-4 py-1.5'}`}
+                    >
+                        Academic
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('examinations')}
+                        className={`min-h-[44px] transition-all whitespace-nowrap ${activeTab === 'examinations' ? 'bg-amber-500 text-black font-semibold rounded-full px-4 py-1.5' : 'text-muted-foreground hover:bg-muted rounded-full px-4 py-1.5'}`}
+                    >
+                        Examinations
+                    </button>
+                </div>
+            </div>
+            
+            {activeTab === 'academic' ? (
+                <AcademicContent loading={loadingAcademic} />
+            ) : (
+                <ExaminationsContent loading={loadingExaminations} />
+            )}
+        </div>
+    );
+};
+
+const MergedFinanceSection = () => {
+    const [activeTab, setActiveTab] = useState<'fee' | 'financials'>('fee');
+    return (
+        <div className="space-y-6 pt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">
+                    Finance — {activeTab === 'fee' ? 'Fee Management' : 'Financials'}
+                </h2>
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-full w-fit max-w-full overflow-x-auto custom-scrollbar">
+                    <button
+                        onClick={() => setActiveTab('fee')}
+                        className={`min-h-[44px] transition-all whitespace-nowrap ${activeTab === 'fee' ? 'bg-amber-500 text-black font-semibold rounded-full px-4 py-1.5' : 'text-muted-foreground hover:bg-muted rounded-full px-4 py-1.5'}`}
+                    >
+                        Fee Management
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('financials')}
+                        className={`min-h-[44px] transition-all whitespace-nowrap ${activeTab === 'financials' ? 'bg-amber-500 text-black font-semibold rounded-full px-4 py-1.5' : 'text-muted-foreground hover:bg-muted rounded-full px-4 py-1.5'}`}
+                    >
+                        Financials
+                    </button>
+                </div>
+            </div>
+            
+            {activeTab === 'fee' ? (
+                <Suspense fallback={<LazyFallback />}><FeeManagement /></Suspense>
+            ) : (
+                <Suspense fallback={<LazyFallback />}><ManagementFinancials /></Suspense>
+            )}
+        </div>
+    );
+};
+
+const MergedScheduleAttendanceSection = ({ 
+    loadingAttendance, 
+    loadingTimetable,
+    timetableProps
+}: any) => {
+    const [activeTab, setActiveTab] = useState<'timetable' | 'attendance'>('timetable');
+    return (
+        <div className="space-y-6 pt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">
+                    Schedule & Attendance — {activeTab === 'timetable' ? 'Timetable' : 'Attendance'}
+                </h2>
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-full w-fit max-w-full overflow-x-auto custom-scrollbar">
+                    <button
+                        onClick={() => setActiveTab('timetable')}
+                        className={`min-h-[44px] transition-all whitespace-nowrap ${activeTab === 'timetable' ? 'bg-amber-500 text-black font-semibold rounded-full px-4 py-1.5' : 'text-muted-foreground hover:bg-muted rounded-full px-4 py-1.5'}`}
+                    >
+                        Timetable
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('attendance')}
+                        className={`min-h-[44px] transition-all whitespace-nowrap ${activeTab === 'attendance' ? 'bg-amber-500 text-black font-semibold rounded-full px-4 py-1.5' : 'text-muted-foreground hover:bg-muted rounded-full px-4 py-1.5'}`}
+                    >
+                        Attendance
+                    </button>
+                </div>
+            </div>
+            
+            {activeTab === 'timetable' ? (
+                <TimetableContent loading={loadingTimetable} {...timetableProps} />
+            ) : (
+                <AttendanceSection loading={loadingAttendance} />
+            )}
+        </div>
+    );
+};
+
 export default function ManagementDashboard() {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -3444,6 +4821,16 @@ export default function ManagementDashboard() {
     const [loadingExaminations, setLoadingExaminations] = useState(true);
     const [loadingAttendance, setLoadingAttendance] = useState(true);
     const [loadingTimetable, setLoadingTimetable] = useState(true);
+    const [loadingPlacements, setLoadingPlacements] = useState(true);
+    const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+    const [loadingReports, setLoadingReports] = useState(true);
+
+    useEffect(() => {
+        const removedSections = ['system monitor', 'student overview', 'staff overview', 'academic', 'examinations', 'fee management', 'financials', 'timetable', 'attendance'];
+        if (removedSections.includes(activeSection)) {
+            setActiveSection('overview');
+        }
+    }, [activeSection]);
 
     // Timetable Filters & View State
     const [timetableType, setTimetableType] = useState<'classes' | 'exams' | 'staff'>('classes');
@@ -3454,34 +4841,40 @@ export default function ManagementDashboard() {
 
     // Simulation Loading States
     useEffect(() => {
-        if (activeSection === 'student overview') {
+        if (activeSection === 'people') {
             setLoadingStudentOverview(true);
-            const timer = setTimeout(() => setLoadingStudentOverview(false), 800);
-            return () => clearTimeout(timer);
-        }
-        if (activeSection === 'staff overview') {
             setLoadingStaffOverview(true);
-            const timer = setTimeout(() => setLoadingStaffOverview(false), 800);
-            return () => clearTimeout(timer);
+            const timer1 = setTimeout(() => setLoadingStudentOverview(false), 800);
+            const timer2 = setTimeout(() => setLoadingStaffOverview(false), 800);
+            return () => { clearTimeout(timer1); clearTimeout(timer2); };
         }
-        if (activeSection === 'academic') {
+        if (activeSection === 'academic & exams') {
             setLoadingAcademic(true);
-            const timer = setTimeout(() => setLoadingAcademic(false), 800);
-            return () => clearTimeout(timer);
-        }
-        if (activeSection === 'examinations') {
             setLoadingExaminations(true);
-            const timer = setTimeout(() => setLoadingExaminations(false), 800);
-            return () => clearTimeout(timer);
+            const timer1 = setTimeout(() => setLoadingAcademic(false), 800);
+            const timer2 = setTimeout(() => setLoadingExaminations(false), 800);
+            return () => { clearTimeout(timer1); clearTimeout(timer2); };
         }
-        if (activeSection === 'attendance') {
+        if (activeSection === 'schedule & attendance') {
             setLoadingAttendance(true);
-            const timer = setTimeout(() => setLoadingAttendance(false), 800);
+            setLoadingTimetable(true);
+            const timer1 = setTimeout(() => setLoadingAttendance(false), 800);
+            const timer2 = setTimeout(() => setLoadingTimetable(false), 800);
+            return () => { clearTimeout(timer1); clearTimeout(timer2); };
+        }
+        if (activeSection === 'placements') {
+            setLoadingPlacements(true);
+            const timer = setTimeout(() => setLoadingPlacements(false), 800);
             return () => clearTimeout(timer);
         }
-        if (activeSection === 'timetable') {
-            setLoadingTimetable(true);
-            const timer = setTimeout(() => setLoadingTimetable(false), 800);
+        if (activeSection === 'announcements') {
+            setLoadingAnnouncements(true);
+            const timer = setTimeout(() => setLoadingAnnouncements(false), 800);
+            return () => clearTimeout(timer);
+        }
+        if (activeSection === 'reports') {
+            setLoadingReports(true);
+            const timer = setTimeout(() => setLoadingReports(false), 800);
             return () => clearTimeout(timer);
         }
     }, [activeSection]);
@@ -3602,20 +4995,15 @@ export default function ManagementDashboard() {
                     {[
                         { icon: LayoutDashboard, label: 'Overview' },
                         { icon: TrendingUp, label: 'Analytics' },
-                        { icon: DollarSign, label: 'Financials' },
                         { icon: Users, label: 'Departments' },
-                        { icon: GraduationCap, label: 'Student Overview' },
-                        { icon: Briefcase, label: 'Staff Overview' },
-                        { icon: BookOpen, label: 'Academic' },
-                        { icon: ClipboardCheck, label: 'Attendance' },
-                        { icon: FileText, label: 'Examinations' },
-                        { icon: Wallet, label: 'Fee Management' },
+                        { icon: Users, label: 'People' },
+                        { icon: BookOpen, label: 'Academic & Exams' },
+                        { icon: DollarSign, label: 'Finance' },
+                        { icon: CalendarClock, label: 'Schedule & Attendance' },
                         { icon: Library, label: 'Library' },
-                        { icon: Calendar, label: 'Timetable' },
                         { icon: Award, label: 'Placements' },
                         { icon: Megaphone, label: 'Announcements' },
                         { icon: BarChart, label: 'Reports' },
-                        { icon: Server, label: 'System Monitor' },
                         { icon: User, label: 'My Profile' },
                     ].map((item) => {
                         const isActive = activeSection === item.label.toLowerCase();
@@ -3919,46 +5307,39 @@ export default function ManagementDashboard() {
                             )
                         ) : activeSection === 'analytics' ? (
                             <Suspense fallback={<LazyFallback />}><ManagementAnalytics /></Suspense>
-                        ) : activeSection === 'financials' ? (
-                            <Suspense fallback={<LazyFallback />}><ManagementFinancials /></Suspense>
                         ) : activeSection === 'departments' ? (
                             <Suspense fallback={<LazyFallback />}><ManagementDepartments /></Suspense>
-                        ) : activeSection === 'student overview' ? (
-                            <StudentOverviewContent loading={loadingStudentOverview} />
-                        ) : activeSection === 'staff overview' ? (
-                            <StaffOverviewContent loading={loadingStaffOverview} />
-                        ) : activeSection === 'academic' ? (
-                            <AcademicContent loading={loadingAcademic} />
-                        ) : activeSection === 'attendance' ? (
-                            <AttendanceSection loading={loadingAttendance} />
-                        ) : activeSection === 'examinations' ? (
-                            <ExaminationsContent loading={loadingExaminations} />
-                        ) : activeSection === 'fee management' ? (
-                            <Suspense fallback={<LazyFallback />}><FeeManagement /></Suspense>
+                        ) : activeSection === 'people' ? (
+                            <MergedPeopleSection loadingStudent={loadingStudentOverview} loadingStaff={loadingStaffOverview} />
+                        ) : activeSection === 'academic & exams' ? (
+                            <MergedAcademicExamsSection loadingAcademic={loadingAcademic} loadingExaminations={loadingExaminations} />
+                        ) : activeSection === 'finance' ? (
+                            <MergedFinanceSection />
+                        ) : activeSection === 'schedule & attendance' ? (
+                            <MergedScheduleAttendanceSection 
+                                loadingAttendance={loadingAttendance}
+                                loadingTimetable={loadingTimetable}
+                                timetableProps={{
+                                    type: timetableType,
+                                    setType: setTimetableType,
+                                    dept: timetableDeptFilter,
+                                    setDept: setTimetableDeptFilter,
+                                    year: timetableYearFilter,
+                                    setYear: setTimetableYearFilter,
+                                    search: timetableStaffSearch,
+                                    setSearch: setTimetableStaffSearch,
+                                    editMode: isEditMode,
+                                    setEditMode: setIsEditMode
+                                }}
+                            />
                         ) : activeSection === 'library' ? (
                             <Suspense fallback={<LazyFallback />}><LibraryOverview /></Suspense>
-                        ) : activeSection === 'timetable' ? (
-                            <TimetableContent 
-                                loading={loadingTimetable}
-                                type={timetableType}
-                                setType={setTimetableType}
-                                dept={timetableDeptFilter}
-                                setDept={setTimetableDeptFilter}
-                                year={timetableYearFilter}
-                                setYear={setTimetableYearFilter}
-                                search={timetableStaffSearch}
-                                setSearch={setTimetableStaffSearch}
-                                editMode={isEditMode}
-                                setEditMode={setIsEditMode}
-                            />
                         ) : activeSection === 'placements' ? (
-                            <Suspense fallback={<LazyFallback />}><Placements /></Suspense>
+                            <PlacementsContent loading={loadingPlacements} />
                         ) : activeSection === 'announcements' ? (
-                            <Suspense fallback={<LazyFallback />}><Announcements /></Suspense>
+                            <AnnouncementsContent loading={loadingAnnouncements} />
                         ) : activeSection === 'reports' ? (
-                            <Suspense fallback={<LazyFallback />}><Reports /></Suspense>
-                        ) : activeSection === 'system monitor' ? (
-                            <Suspense fallback={<LazyFallback />}><SystemMonitor /></Suspense>
+                            <ReportsContent loading={loadingReports} />
                         ) : activeSection === 'my profile' ? (
                             <Suspense fallback={<LazyFallback />}><ManagementProfile /></Suspense>
                         ) : (

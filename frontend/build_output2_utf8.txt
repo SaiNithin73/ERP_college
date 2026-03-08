@@ -1,0 +1,8 @@
+﻿
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/pages/management-dashboard.tsx(144,7): error TS6133: 'Announcements' is declared but its value is never read.
+src/pages/management-dashboard.tsx(145,7): error TS6133: 'Reports' is declared but its value is never read.
+src/pages/management-dashboard.tsx(904,7): error TS6133: 'ANNOUNCEMENTS_DATA' is declared but its value is never read.
+src/pages/management-dashboard.tsx(4287,31): error TS6133: 'loading' is declared but its value is never read.

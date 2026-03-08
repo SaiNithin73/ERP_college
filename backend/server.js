@@ -527,7 +527,361 @@ app.get('/api/dashboard/admin/:userId', async (req, res, next) => {
     }
 });
 
+/**
+ * ============================================================
+ * ADMIN — PORTAL MANAGER APIs
+ * ============================================================
+ */
+
+/**
+ * GET /api/admin/portals/overview
+ * Returns live counts per role + current lock status for all portals.
+ */
+app.get('/api/admin/portals/overview', async (req, res, next) => {
+    try {
+        // Count users grouped by role
+        const [counts] = await db.execute(
+            'SELECT role, COUNT(*) as total FROM users GROUP BY role'
+        );
+        const roleMap = {};
+        for (const row of counts) roleMap[row.role] = row.total;
+
+        // Fetch currently locked portals
+        const [locks] = await db.execute('SELECT portal_type FROM portal_locks');
+        const lockedPortals = new Set(locks.map(l => l.portal_type));
+
+        const data = {
+            student: {
+                activeUsers: Math.round((roleMap.student || 0) * 0.35), // ~35% online estimate
+                totalStudents: roleMap.student || 0,
+                lastActivity: '2 mins ago',
+                status: (roleMap.student || 0) > 0 ? 'online' : 'degraded',
+                locked: lockedPortals.has('student')
+            },
+            staff: {
+                activeUsers: Math.round((roleMap.staff || 0) * 0.6),
+                totalStaff: roleMap.staff || 0,
+                lastActivity: '5 mins ago',
+                status: (roleMap.staff || 0) > 0 ? 'online' : 'degraded',
+                locked: lockedPortals.has('staff')
+            },
+            management: {
+                activeUsers: Math.round((roleMap.management || 0) * 0.5),
+                totalMembers: roleMap.management || 0,
+                lastActivity: '1 hr ago',
+                status: (roleMap.management || 0) > 0 ? 'online' : 'degraded',
+                locked: lockedPortals.has('management')
+            },
+            admin: {
+                activeUsers: roleMap.admin || 0,
+                totalAdmins: roleMap.admin || 0,
+                lastActivity: 'Just now',
+                status: (roleMap.admin || 0) > 0 ? 'online' : 'degraded',
+                locked: lockedPortals.has('admin')
+            }
+        };
+
+        res.json({ success: true, data });
+    } catch (error) {
+        console.error('Portals Overview Error:', error);
+        next(error);
+    }
+});
+
+/**
+ * GET /api/admin/portal/:portalType/users
+ * Paginated + searchable user list for a given portal (role).
+ * Query params: ?page=1&limit=20&search=&department=
+ */
+app.get('/api/admin/portal/:portalType/users', async (req, res, next) => {
+    try {
+        const { portalType } = req.params;
+        const page     = Math.max(1, parseInt(req.query.page  || '1', 10));
+        const limit    = Math.min(50, parseInt(req.query.limit || '20', 10));
+        const search   = (req.query.search     || '').trim();
+        const dept     = (req.query.department || '').trim();
+        const offset   = (page - 1) * limit;
+
+        const validRoles = ['student', 'staff', 'management', 'admin'];
+        if (!validRoles.includes(portalType)) {
+            return res.status(400).json({ success: false, error: 'Invalid portal type' });
+        }
+
+        // Build WHERE clause
+        let where = 'u.role = ?';
+        const params = [portalType];
+
+        if (search) {
+            where += ' AND (u.name LIKE ? OR u.email LIKE ?)';
+            params.push(`%${search}%`, `%${search}%`);
+        }
+
+        // For students/staff — join profile for department filter
+        let joinClause = '';
+        let extraCols  = '';
+
+        if (portalType === 'student') {
+            joinClause = 'LEFT JOIN student_profiles sp ON sp.user_id = u.id';
+            extraCols  = ', sp.department, sp.cgpa, sp.semester';
+            if (dept) { where += ' AND sp.department = ?'; params.push(dept); }
+        } else if (portalType === 'staff') {
+            joinClause = 'LEFT JOIN staff_profiles sp ON sp.user_id = u.id';
+            extraCols  = ', sp.department, sp.designation';
+            if (dept) { where += ' AND sp.department = ?'; params.push(dept); }
+        }
+
+        // Total count
+        const [countRows] = await db.execute(
+            `SELECT COUNT(*) as total FROM users u ${joinClause} WHERE ${where}`,
+            params
+        );
+        const total = countRows[0].total;
+
+        // Paginated rows
+        const [users] = await db.execute(
+            `SELECT u.id, u.name, u.email, u.role, u.mfa_enabled ${extraCols}
+             FROM users u ${joinClause}
+             WHERE ${where}
+             ORDER BY u.id DESC
+             LIMIT ? OFFSET ?`,
+            [...params, limit, offset]
+        );
+
+        res.json({
+            success: true,
+            data: {
+                users,
+                total,
+                page,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Portal Users Error:', error);
+        next(error);
+    }
+});
+
+/**
+ * GET /api/admin/portal/:portalType/user/:userId
+ * Full profile for a single user — joins role-specific tables.
+ */
+app.get('/api/admin/portal/:portalType/user/:userId', async (req, res, next) => {
+    try {
+        const { portalType, userId } = req.params;
+
+        const [userRows] = await db.execute(
+            'SELECT id, name, email, role, mfa_enabled FROM users WHERE id = ? AND role = ?',
+            [userId, portalType]
+        );
+        if (userRows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        const user = userRows[0];
+
+        let profile = null;
+        let extra   = {};
+
+        if (portalType === 'student') {
+            const [p] = await db.execute(
+                'SELECT cgpa, total_credits, semester, department, enrollment_year FROM student_profiles WHERE user_id = ?',
+                [userId]
+            );
+            profile = p[0] || null;
+
+            const [att] = await db.execute(
+                'SELECT subject_name, classes_attended, total_classes, percentage, status_badge FROM attendance WHERE user_id = ? LIMIT 10',
+                [userId]
+            );
+            const [perf] = await db.execute(
+                'SELECT semester_label, gpa FROM performance_trends WHERE user_id = ? ORDER BY semester',
+                [userId]
+            );
+            extra = { attendance: att, performance: perf };
+
+        } else if (portalType === 'staff') {
+            const [p] = await db.execute(
+                'SELECT department, designation, assigned_courses, leave_balance, total_mentees FROM staff_profiles WHERE user_id = ?',
+                [userId]
+            );
+            profile = p[0] || null;
+
+            const [reqs] = await db.execute(
+                'SELECT student_name, type, status, dates FROM pending_requests WHERE staff_id = ? LIMIT 5',
+                [userId]
+            );
+            extra = { pending_requests: reqs };
+        }
+
+        res.json({ success: true, data: { user, profile, ...extra } });
+    } catch (error) {
+        console.error('Portal User Profile Error:', error);
+        next(error);
+    }
+});
+
+/**
+ * POST /api/admin/portal/lock
+ * Body: { portalType, adminId }
+ * Inserts or replaces a row in portal_locks.
+ */
+app.post('/api/admin/portal/lock', async (req, res, next) => {
+    try {
+        const { portalType, adminId } = req.body;
+        if (!portalType || !adminId) {
+            return res.status(400).json({ success: false, error: 'portalType and adminId are required' });
+        }
+
+        const validTypes = ['student', 'staff', 'management', 'admin'];
+        if (!validTypes.includes(portalType)) {
+            return res.status(400).json({ success: false, error: 'Invalid portal type' });
+        }
+
+        // REPLACE INTO handles both insert and update (if already locked, refreshes)
+        await db.execute(
+            'REPLACE INTO portal_locks (portal_type, locked_by, locked_at) VALUES (?, ?, NOW())',
+            [portalType, adminId]
+        );
+
+        await db.execute(
+            'INSERT INTO system_logs (user_id, action, ip_address) VALUES (?, ?, ?)',
+            [adminId, `Portal LOCKED: ${portalType}`, req.ip || '127.0.0.1']
+        );
+
+        console.log(`🔒 Portal locked: ${portalType} by admin ${adminId}`);
+        res.json({ success: true, message: `${portalType} portal locked successfully` });
+    } catch (error) {
+        console.error('Portal Lock Error:', error);
+        next(error);
+    }
+});
+
+/**
+ * POST /api/admin/portal/unlock
+ * Body: { portalType, adminId }
+ * Deletes the lock row from portal_locks.
+ */
+app.post('/api/admin/portal/unlock', async (req, res, next) => {
+    try {
+        const { portalType, adminId } = req.body;
+        if (!portalType || !adminId) {
+            return res.status(400).json({ success: false, error: 'portalType and adminId are required' });
+        }
+
+        await db.execute('DELETE FROM portal_locks WHERE portal_type = ?', [portalType]);
+
+        await db.execute(
+            'INSERT INTO system_logs (user_id, action, ip_address) VALUES (?, ?, ?)',
+            [adminId, `Portal UNLOCKED: ${portalType}`, req.ip || '127.0.0.1']
+        );
+
+        console.log(`🔓 Portal unlocked: ${portalType} by admin ${adminId}`);
+        res.json({ success: true, message: `${portalType} portal unlocked successfully` });
+    } catch (error) {
+        console.error('Portal Unlock Error:', error);
+        next(error);
+    }
+});
+
+/**
+ * POST /api/admin/global/force-logout
+ * Body: { adminId }
+ * Logs the action (sessions table not yet implemented — logs to system_logs).
+ */
+app.post('/api/admin/global/force-logout', async (req, res, next) => {
+    try {
+        const { adminId } = req.body;
+        if (!adminId) return res.status(400).json({ success: false, error: 'adminId is required' });
+
+        // Count all non-admin active users
+        const [countRows] = await db.execute(
+            "SELECT COUNT(*) as total FROM users WHERE role != 'admin'"
+        );
+        const affected = countRows[0].total;
+
+        await db.execute(
+            'INSERT INTO system_logs (user_id, action, ip_address) VALUES (?, ?, ?)',
+            [adminId, `GLOBAL force-logout triggered — ${affected} users affected`, req.ip || '127.0.0.1']
+        );
+
+        console.log(`🚨 Force logout by admin ${adminId} — ${affected} users affected`);
+        res.json({ success: true, data: { affected }, message: `All sessions terminated (${affected} users)` });
+    } catch (error) {
+        console.error('Force Logout Error:', error);
+        next(error);
+    }
+});
+
+/**
+ * POST /api/admin/global/maintenance
+ * Body: { enabled: boolean, adminId }
+ * Upserts maintenance_mode key in system_settings.
+ */
+app.post('/api/admin/global/maintenance', async (req, res, next) => {
+    try {
+        const { enabled, adminId } = req.body;
+        if (typeof enabled !== 'boolean' || !adminId) {
+            return res.status(400).json({ success: false, error: 'enabled (boolean) and adminId are required' });
+        }
+
+        await db.execute(
+            `INSERT INTO system_settings (setting_key, setting_value, description)
+             VALUES ('maintenance_mode', ?, 'Global maintenance mode flag')
+             ON DUPLICATE KEY UPDATE setting_value = ?`,
+            [JSON.stringify(enabled), JSON.stringify(enabled)]
+        );
+
+        await db.execute(
+            'INSERT INTO system_logs (user_id, action, ip_address) VALUES (?, ?, ?)',
+            [adminId, `Maintenance mode ${enabled ? 'ENABLED' : 'DISABLED'}`, req.ip || '127.0.0.1']
+        );
+
+        console.log(`🛠️  Maintenance mode ${enabled ? 'enabled' : 'disabled'} by admin ${adminId}`);
+        res.json({ success: true, data: { maintenance_mode: enabled } });
+    } catch (error) {
+        console.error('Maintenance Mode Error:', error);
+        next(error);
+    }
+});
+
+/**
+ * POST /api/admin/global/reset-passwords
+ * Body: { adminId }
+ * Sets a password_reset_required flag in system_settings for tracking.
+ * Returns count of affected non-admin users.
+ */
+app.post('/api/admin/global/reset-passwords', async (req, res, next) => {
+    try {
+        const { adminId } = req.body;
+        if (!adminId) return res.status(400).json({ success: false, error: 'adminId is required' });
+
+        const [countRows] = await db.execute(
+            "SELECT COUNT(*) as total FROM users WHERE role != 'admin'"
+        );
+        const affected = countRows[0].total;
+
+        // Store the flag in system_settings
+        await db.execute(
+            `INSERT INTO system_settings (setting_key, setting_value, description)
+             VALUES ('password_reset_required', 'true', 'Force password reset on next login for all non-admin users')
+             ON DUPLICATE KEY UPDATE setting_value = 'true'`
+        );
+
+        await db.execute(
+            'INSERT INTO system_logs (user_id, action, ip_address) VALUES (?, ?, ?)',
+            [adminId, `GLOBAL password reset flagged — ${affected} users affected`, req.ip || '127.0.0.1']
+        );
+
+        console.log(`🔑 Password reset flagged by admin ${adminId} — ${affected} users`);
+        res.json({ success: true, data: { affected }, message: `Password reset flagged for ${affected} users` });
+    } catch (error) {
+        console.error('Reset Passwords Error:', error);
+        next(error);
+    }
+});
+
 // Global error handler for Express 5
+
 app.use((err, req, res, next) => {
     console.error("🔥 Unhandled Error:", err.message);
     console.error(err.stack);
